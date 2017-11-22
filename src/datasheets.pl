@@ -4,17 +4,17 @@
 		     ,unit/3
 		     ,battlefield_role/2
 		     ,power/2
-		     ,unit_profiles/10
+		     ,unit_profiles/11
 		     ,damaged_profiles/4
-		     ,unit_composition/2
-		     ,unit_composition_options/2
+		     ,unit_composition/3
+		     ,unit_composition_options/6
 		     ,wargear/3
-		     ,wargear_options/2
+		     ,wargear_options/5
 		     ,abilities/2
 		     ,weapons/2
 		     ,weapon/8
-		     ,faction_keywords/2
-		     ,keywords/2
+		     ,faction_keyword/2
+		     ,keyword/2
 		     ]).
 
 :-op(200,yf,+).
@@ -40,6 +40,7 @@
 %
 unit(lord_of_contagion, 'Lord of Contagion', chaos).
 unit(kv128_stormsurge, 'KV128 Stormsurge', tau).
+unit(strike_team, 'Strike team', tau).
 
 
 
@@ -51,18 +52,21 @@ unit(kv128_stormsurge, 'KV128 Stormsurge', tau).
 %	Used when making a Battle-forged army.
 %
 %	Symbols used on datasheets:
-%	* Skull HQ
-%	* Play Troops
-%	* Skullcross Elites
-%	* Thunder Fast Attack
-%	* Explosion Heavy Support
-%	* Skullarrow Dedicated Transport
-%	* Wingsword Flyer
-%	* Rook Fortification
-%	* Gauntlet Lord of War
+%	* Skull: HQ
+%	* Play: Troops
+%	* Skullcross: Elites
+%	* Thunder: Fast Attack
+%	* Explosion: Heavy Support
+%	* Skullarrow: Dedicated Transport
+%	* Wingsword: Flyer
+%	* Rook: Fortification
+%	* Gauntlet: Lord of War
+%
+%	Also see page 241 on the 8th edition rulebook.
 %
 battlefield_role(lord_of_contagion, hq).
 battlefield_role(kv128_stormsurge, lord_of_war).
+battlefield_role(strike_team,troops).
 
 
 
@@ -72,12 +76,18 @@ battlefield_role(kv128_stormsurge, lord_of_war).
 %
 power(lord_of_contagion, 9).
 power(kv128_stormsurge, 22).
+power(strike_team,3).
 
 
-
-%!	unit_profiles(?Id,?M,?WS,?BS,?S,?T,?W,?A,?Ld,?Sv) is semidet.
+%!	unit_profiles(?Id,?Name,?M,?WS,?BS,?S,?T,?W,?A,?Ld,?Sv) is
+%!	semidet.
 %
 %	A unit's profiles - the characteristics of the unit's members.
+%
+%	For units with multiple types of models, the profile of each
+%	type of model is listed under a clause with the unit's ID and
+%	the model's Name. For units with a single type of model, Name is
+%	the same as their Id.
 %
 %	When adding units to the database, use the following template to
 %	quickly and accurately fill in unit details:
@@ -85,9 +95,12 @@ power(kv128_stormsurge, 22).
 %	unit_profiles(Id,M,WS,BS,S,T,W,A,Ld,Sv)
 %	==
 %
-unit_profiles(lord_of_contagion, 4, 2+, 2+, 4, 5, 6, 4, 9, 2+).
-unit_profiles(kv128_stormsurge,6,5+,*,*,7,20,*,8,3+).
-
+unit_profiles(lord_of_contagion,lord_of_contagion,4,2+,2+,4,5,6,4,9,2+).
+unit_profiles(kv128_stormsurge,kv128_stormsurge,6,5+,*,*,7,20,*,8,3+).
+unit_profiles(strike_team,fire_warrior,6,5+,4+,3,3,1,1,6,4+).
+unit_profiles(strike_team,fire_warrior_shasui,6,5+,4+,3,3,1,1,7,4+).
+unit_profiles(strike_team,ds8_tactical_support_turret,nil,nil,4+,3,3,1,0,4,4+).
+unit_profiles(strike_team,mv36_guardian_drone,8,5+,5+,3,4,1,1,6,4+).
 
 
 %!	damaged_profiles(?Id,?Max_wounds,?Min_wounds,?Mods) is det.
@@ -100,22 +113,69 @@ damaged_profiles(kv128_stormsurge,5,1,[4+,8,3]).
 
 
 
-%!	unit_composition(?Id, ?Composition) is semidet.
+%!	unit_composition(?Id, ?Model_type, ?Number) is semidet.
 %
 %	The number and types of models in a unit.
 %
-unit_composition(lord_of_contagion,single_model).
-unit_composition(kv128_stormsurge,single_model).
+unit_composition(lord_of_contagion,single_model,1).
+unit_composition(kv128_stormsurge,single_model,1).
+unit_composition(strike_team,fire_warrior,5).
 
 
 
-%!	unit_composition_options(?Id, ?Option) is semidet.
+%!	unit_composition_options(?Id,?Model,?Number_in,?Substitute,?Number_out,?Power)
+%!	is semidet.
 %
 %	Optional changes to a unit's composition.
 %
-unit_composition_options(lord_of_contagion, nil).
-unit_composition_options(kv128_stormsurge, nil).
-
+%	Each option lists the type and number of Model that can be added
+%	to the unit, the type and number of model it Substitutes for and
+%	the change to the Power level of the unit if that option is
+%	taken.
+%
+%	When additional models of an already existing type may be added
+%	to a unit, the atom "nil" should be used in place of a
+%	Substitute name and numbers.
+%
+%	Some options may include multiple models in the same "slot" (as
+%	a single addition or substitution). In that case, the name and
+%	number of such models is given as a list.
+%
+%	@tbd In some cases, a model is listed in the unit's profiles but
+%	instead of it being given as part of the unit's composition it's
+%	instead listed as a wargear option. This is the case with DS8
+%	Tactical Support Turrets that can be selected as a warger option
+%	by T'Au Fire Warrior Strike Teams. Since such "wargear" have a
+%	separate model and profile, we will consider them as unit
+%	composition options, rather than wargear options. In the case of
+%	DS8 Tactical Drones, they also have two weapon options. These
+%	should be treated as wargear options for that type of model.
+%	This is probably a bit of a "bug" in the datasheet organisation.
+%
+%	@tbd A better notation for adding/ substituting unit may be
+%	along the lines of:
+%	==
+%	...,fire_warrior_shashui,+1,fire_warrior,-1,...
+%	==
+%	Where it's obvious that you're adding one Fire Warrior Shasu'ui
+%	and subtracting one Fire Warrior. Then, if a model is being
+%	added without replacing another, we can just write:
+%	==
+%	...,fire_warrior,+1,fire_warrior,0,...
+%	==
+%
+%	The more complicated cases with multiple models in a single slot
+%	will still suck.
+%
+unit_composition_options(lord_of_contagion, nil, nil, nil, nil, nil).
+unit_composition_options(kv128_stormsurge, nil, nil, nil, nil, nil).
+unit_composition_options(strike_team,fire_warrior,+5,nil,nil,+2).
+unit_composition_options(strike_team,fire_warrior,+7,nil,nil,+3).
+unit_composition_options(strike_team,fire_warrior_shasui,1,fire_warrior,1,0).
+unit_composition_options(strike_team,tactical_drone,2,nil,nil,+1).
+unit_composition_options(strike_team,[tactical_drone
+				     ,mv36_guardian_drone],[1,1],nil,nil,+1).
+unit_composition_options(strike_team,ds8_tactical_support_turret,+1,nil,nil,0).
 
 
 %!	wargear(?Id, ?Wargear, ?Number) is semidet.
@@ -132,22 +192,35 @@ wargear(kv128_stormsurge, destroyer_missiles, 4).
 wargear(kv128_stormsurge, flamer, 2).
 wargear(kv128_stormsurge, pulse_blastcannon, 1).
 wargear(kv128_stormsurge, smart_missile_system, 2).
+wargear(fire_warrior,pulse_rifle,1).
+wargear(fire_warrior,photon_grenade,1).
 
 
-
-%!	wargear_options(?Id,?Options) is semidet.
+%!	wargear_options(?Id,?Item,+Number_out,+Substitute,+Number_in)
+%	is semidet.
 %
 %	Optional substitutions of a unit's wargear items.
 %
-%	Each Options is a compound, Item-N/Substitute-M, where Item is
-%	the name of an item in the unit's wargear list, Substitute is
-%	the name of an item that can replace it and N and M the numbers
-%	of each item that can be substituted for each other.
+%	Each clause lists the wargear Item and is Substitute, along with
+%	their respective numbers (where Number_out is the number of
+%	instances of the Item to be replaced and Number_in the number of
+%	instances of the Substitute to replace them with). Each Item and
+%	Substitute are the names of items in the unit's wargear list (as
+%	given in wargerar/3).
 %
-wargear_options(kv128_stormsurge,flamer-2/burst_cannon-2).
-wargear_options(kv128_stormsurge,flamer-2/airbursting_fragmentation_projector-2).
-wargear_options(kv128_stormsurge,pulse_blastcannon-1/pulse_driver_cannon-1).
-wargear_options(kv128_stormsurge,support_systems-3).
+%	When an Item can be selected as an option without replacing
+%	anything (such as when choosing items from T'au Support Systems
+%	etc) Substitute and Number_in should both be set to the atom
+%	"nil".
+%
+wargear_options(kv128_stormsurge,flamer,+2,burst_cannon,-2).
+wargear_options(kv128_stormsurge,flamer,+2,airbursting_fragmentation_projector,-2).
+wargear_options(kv128_stormsurge,pulse_blastcannon,+1,pulse_driver_cannon,-1).
+wargear_options(kv128_stormsurge,support_systems,3,nil,nil).
+wargear_options(fire_warrior,pulse_rifle,+1,pulse_carbine,-1).
+wargear_options(fire_warrior_shasui,pulse_rifle,+1,pulse_carbine,-1).
+wargear_options(fire_warrior_shasui,markerlight,+1,nil,nil).
+wargear_options(fire_warrior_shasui,pulse_pistol,+1,nil,nil).
 
 
 
@@ -162,6 +235,12 @@ abilities(lord_of_contagion, teleport_Strike).
 abilities(kv128_stormsurge, explodes).
 abilities(kv128_stormsurge, stabilising_anchors).
 abilities(kv128_stormsurge, walking_battleship).
+abilities(strike_team, for_the_greater_good).
+abilities(strike_team, bonding_knife_ritual).
+abilities(strike_team, drone_support).
+abilities(strike_team, saviour_protocols).
+abilities(strike_team, guardian_field).
+abilities(strike_team, ds8_tactical_support_turret).
 
 
 
@@ -209,38 +288,50 @@ weapon(pulse_blastcannon,long_range,30,heavy(6),10,-3,d-6,[]).
 weapon(pulse_driver_cannon,base,72,heavy(d-3),10,-3,d-6,[if_target(models(10+),heavy(d6))]).
 weapon(smart_missile_system,base,30,heavy(4),5,0,1,[non_visible_targets
 						   ,strips_bonus(cover)]).
+weapon(markerlight,base,36,heavy(1),nil,nil,nil,[markerlight]).
+weapon(missile_pod,base,36,assault(2),7,-1,d-3,[]).
+weapon(pulse_carbine,base,18,assault(2),5,0,1,[]).
+weapon(pulse_pistol,base,12,pistol(1),5,0,1,[]).
+weapon(pulse_rifle,base,30,rapid_fire(1),5,0,1,[]).
+weapon(photon_grenade,base,12,grenade(d-6),nil,nil,nil,[photon_grenade]).
 
 
-
-%!	faction_keywords(?Id, ?Keywords) is semidet.
+%!	faction_keyword(?Id, ?Keywords) is semidet.
 %
-%	A unit's faction keywords.
-%
-%	Each member of the list Keywords is an identifier for a clause
-%	of keyword/n, storing the details of that keyword.
-%
-faction_keywords(lord_of_contagion, chaos).
-faction_keywords(lord_of_contagion, nurgle).
-faction_keywords(lord_of_contagion, heretic_astartes).
-faction_keywords(lord_of_contagion, death_guard).
-faction_keywords(kv128_stormsurge,tau_empire).
-faction_keywords(kv128_stormsurge,<sept>).
-
-
-%!	faction_keywords(?Id, ?Keywords) is semidet.
-%
-%	A unit's other (i.e. non-faction) keywords.
+%	Unit's faction keywords.
 %
 %	Each member of the list Keywords is an identifier for a clause
 %	of keyword/n, storing the details of that keyword.
 %
-keywords(lord_of_contagion, infantry).
-keywords(lord_of_contagion, terminator).
-keywords(lord_of_contagion, character).
-keywords(lord_of_contagion, lord_of_contagion).
-keywords(kv128_stormsurge,vehicle).
-keywords(kv128_stormsurge,titanic).
-keywords(kv128_stormsurge,kv128_stormsurge).
+faction_keyword(lord_of_contagion, chaos).
+faction_keyword(lord_of_contagion, nurgle).
+faction_keyword(lord_of_contagion, heretic_astartes).
+faction_keyword(lord_of_contagion, death_guard).
+faction_keyword(kv128_stormsurge,tau_empire).
+faction_keyword(kv128_stormsurge,<sept>).
+faction_keyword(strike_team,tau_empire).
+faction_keyword(strike_team,<sept>).
 
+
+
+%!	faction_keyword(?Id, ?Keywords) is semidet.
+%
+%	Unit's other (i.e. non-faction) keywords.
+%
+%	Each member of the list Keywords is an identifier for a clause
+%	of keyword/n, storing the details of that keyword.
+%
+keyword(lord_of_contagion, infantry).
+keyword(lord_of_contagion, terminator).
+keyword(lord_of_contagion, character).
+keyword(lord_of_contagion, lord_of_contagion).
+keyword(kv128_stormsurge,vehicle).
+keyword(kv128_stormsurge,titanic).
+keyword(kv128_stormsurge,kv128_stormsurge).
+keyword(strike_team,infantry).
+keyword(strike_team,strike_team).
+keyword(mv36_guardian_drone,drone).
+keyword(mv36_guardian_drone,fly).
+keyword(mv36_guardian_drone,guardian_drone).
 
 
