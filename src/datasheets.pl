@@ -39,9 +39,9 @@
 %	a little cumbersome.
 %
 unit(lord_of_contagion, 'Lord of Contagion', chaos).
-unit(kv128_stormsurge, 'KV128 Stormsurge', tau).
-unit(strike_team, 'Strike team', tau).
-
+unit(kv128_stormsurge, 'KV128 Stormsurge', tau_empire).
+unit(strike_team, 'Strike Team', tau_empire).
+unit(tactical_squad, 'Tactical Squad', adeptus_astartes).
 
 
 
@@ -67,6 +67,7 @@ unit(strike_team, 'Strike team', tau).
 battlefield_role(lord_of_contagion, hq).
 battlefield_role(kv128_stormsurge, lord_of_war).
 battlefield_role(strike_team,troops).
+battlefield_role(tactical_squad,troops).
 
 
 
@@ -77,6 +78,8 @@ battlefield_role(strike_team,troops).
 power(lord_of_contagion, 9).
 power(kv128_stormsurge, 22).
 power(strike_team,3).
+power(tactical_squad,5).
+
 
 
 %!	unit_profiles(?Id,?Name,?M,?WS,?BS,?S,?T,?W,?A,?Ld,?Sv) is
@@ -92,7 +95,7 @@ power(strike_team,3).
 %	When adding units to the database, use the following template to
 %	quickly and accurately fill in unit details:
 %	==
-%	unit_profiles(Id,M,WS,BS,S,T,W,A,Ld,Sv)
+%	unit_profiles(Id,Name,M,WS,BS,S,T,W,A,Ld,Sv)
 %	==
 %
 unit_profiles(lord_of_contagion,lord_of_contagion,4,2+,2+,4,5,6,4,9,2+).
@@ -101,6 +104,8 @@ unit_profiles(strike_team,fire_warrior,6,5+,4+,3,3,1,1,6,4+).
 unit_profiles(strike_team,fire_warrior_shasui,6,5+,4+,3,3,1,1,7,4+).
 unit_profiles(strike_team,ds8_tactical_support_turret,nil,nil,4+,3,3,1,0,4,4+).
 unit_profiles(strike_team,mv36_guardian_drone,8,5+,5+,3,4,1,1,6,4+).
+unit_profiles(tactical_squad,space_marine,6,3+,3+,4,4,1,1,7,3+).
+unit_profiles(tactical_squad,space_marine_sergeant,6,3+,3+,4,4,1,2,8,3+).
 
 
 %!	damaged_profiles(?Id,?Max_wounds,?Min_wounds,?Mods) is det.
@@ -120,6 +125,8 @@ damaged_profiles(kv128_stormsurge,5,1,[4+,8,3]).
 unit_composition(lord_of_contagion,single_model,1).
 unit_composition(kv128_stormsurge,single_model,1).
 unit_composition(strike_team,fire_warrior,5).
+unit_composition(tactical_squad,space_marine_sergeant,1).
+unit_composition(tactical_squad,space_marine,4).
 
 
 
@@ -176,6 +183,8 @@ unit_composition_options(strike_team,tactical_drone,2,nil,nil,+1).
 unit_composition_options(strike_team,[tactical_drone
 				     ,mv36_guardian_drone],[1,1],nil,nil,+1).
 unit_composition_options(strike_team,ds8_tactical_support_turret,+1,nil,nil,0).
+unit_composition_options(tactical_squad,space_marine,+5,nil,nil,+4).
+
 
 
 %!	wargear(?Id, ?Wargear, ?Number) is semidet.
@@ -194,6 +203,14 @@ wargear(kv128_stormsurge, pulse_blastcannon, 1).
 wargear(kv128_stormsurge, smart_missile_system, 2).
 wargear(fire_warrior,pulse_rifle,1).
 wargear(fire_warrior,photon_grenade,1).
+wargear(space_marine,boltgun,1).
+wargear(space_marine,bolt_pistol,1).
+wargear(space_marine,frag_grenade,1).
+wargear(space_marine,krak_grenade,1).
+wargear(space_marine_sergeant,boltgun,1).
+wargear(space_marine_sergeant,bolt_pistol,1).
+wargear(space_marine_sergeant,frag_grenade,1).
+wargear(space_marine_sergeant,krak_grenade,1).
 
 
 %!	wargear_options(?Id,?Item,+Number_out,+Substitute,+Number_in)
@@ -213,6 +230,14 @@ wargear(fire_warrior,photon_grenade,1).
 %	etc) Substitute and Number_in should both be set to the atom
 %	"nil".
 %
+%	In some cases, a single item may be replaced with a number of
+%	different options; for instance, a space marine can replace his
+%	boltgun from the special weapons list _or_ the heavy weapons
+%	list. Such options are listed as separate clauses. That should
+%	suffice, given thatit's impossible to replace a single boltgun
+%	with two items (or at least we should be able to check this by
+%	simple subtraction).
+%
 wargear_options(kv128_stormsurge,flamer,+2,burst_cannon,-2).
 wargear_options(kv128_stormsurge,flamer,+2,airbursting_fragmentation_projector,-2).
 wargear_options(kv128_stormsurge,pulse_blastcannon,+1,pulse_driver_cannon,-1).
@@ -221,7 +246,17 @@ wargear_options(fire_warrior,pulse_rifle,+1,pulse_carbine,-1).
 wargear_options(fire_warrior_shasui,pulse_rifle,+1,pulse_carbine,-1).
 wargear_options(fire_warrior_shasui,markerlight,+1,nil,nil).
 wargear_options(fire_warrior_shasui,pulse_pistol,+1,nil,nil).
-
+% Not sure about whether the space marine sergeant can replace only
+% his bolt pistol or boltgun, or he must replace both with equipment.
+wargear_options(space_marine_sergeant,seargeant_equipment,+1,bolt_pistol,-1).
+wargear_options(space_marine_sergeant,seargeant_equipment,+1,boltgun,-1).
+% This is only true when the squad has fewer than 10 models. Need to be
+% able to reprsent conditions like this.
+% Also, when the squad has ten models, two marines can take items from
+% the heavy and special weapons lists, but only one marine can take an
+% item from each list. That should be possible to represent also.
+wargear_options(space_marine,special_weapons,+1,boltgun,-1).
+wargear_options(space_marine,heavy_weapons,+1,boltgun,-1).
 
 
 %!	abilities(?Id, ?Abilities) is semidet.
@@ -241,6 +276,8 @@ abilities(strike_team, drone_support).
 abilities(strike_team, saviour_protocols).
 abilities(strike_team, guardian_field).
 abilities(strike_team, ds8_tactical_support_turret).
+abilities(tactical_squad,and_the_shall_know_no_fear).
+abilities(tactical_squad,combat_squads).
 
 
 
@@ -294,6 +331,11 @@ weapon(pulse_carbine,base,18,assault(2),5,0,1,[]).
 weapon(pulse_pistol,base,12,pistol(1),5,0,1,[]).
 weapon(pulse_rifle,base,30,rapid_fire(1),5,0,1,[]).
 weapon(photon_grenade,base,12,grenade(d-6),nil,nil,nil,[photon_grenade]).
+weapon(bolt_pistol,base,12,pistol(1),4,0,1,[]).
+weapon(boltgun,base,24,rapid_fire(1),4,0,1,[]).
+weapon(frag_grenade,base,6,grenade(d-6),3,0,1,[]).
+weapon(krak_grenade,6,base,grenade(1),6,-1,d-3,[]).
+
 
 
 %!	faction_keyword(?Id, ?Keywords) is semidet.
@@ -311,6 +353,9 @@ faction_keyword(kv128_stormsurge,tau_empire).
 faction_keyword(kv128_stormsurge,<sept>).
 faction_keyword(strike_team,tau_empire).
 faction_keyword(strike_team,<sept>).
+faction_keyword(tactical_squad,imperium).
+faction_keyword(tactical_squad,adeptus_astartes).
+faction_keyword(tactical_squad,<chapter>).
 
 
 
@@ -333,5 +378,6 @@ keyword(strike_team,strike_team).
 keyword(mv36_guardian_drone,drone).
 keyword(mv36_guardian_drone,fly).
 keyword(mv36_guardian_drone,guardian_drone).
-
+keyword(tactical_squad,infantry).
+keyword(tactical_squad,tactical_squad).
 
