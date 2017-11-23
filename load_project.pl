@@ -9,6 +9,8 @@ user:file_search_path(output, project_root(output)).
 :-doc_browser.
 
 :-use_module(configuration).
+:-use_module(src(dice)).
+:-use_module(src(datasheets)).
 :-use_module(src(simulation)).
 
 edit_files:-
@@ -16,6 +18,7 @@ edit_files:-
 	,edit(project_root(configuration))
 	,edit(src(simulation))
 	,edit(src(datasheets))
+	,edit(src(dice))
 	.
 :-edit_files.
 
