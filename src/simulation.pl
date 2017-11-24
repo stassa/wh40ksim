@@ -27,6 +27,10 @@
 %
 %	Run a simulation for N rounds and report the results.
 %
+%	Sequence should be the atomic name of one of the combat
+%	sequences known to the system; see sequence_simulation/3 for a
+%	list thereof.
+%
 simulation_report(N, S, Ps):-
 	n_rounds_simulation(N, S, Ps, Rs)
 	,format('Ran ~w rounds of ~w~n', [N,S])
@@ -49,6 +53,10 @@ simulation_report(N, S, Ps):-
 %!	n_rounds_simulation(+Rounds,+Sequence,+Params,-Results).
 %
 %	Run a simulation for N rounds.
+%
+%	Sequence should be the atomic name of one of the combat
+%	sequences known to the system; see sequence_simulation/3 for a
+%	list thereof.
 %
 n_rounds_simulation(N, S, Ps, Rs):-
 	atom_concat(S, '_sequence', S_)
@@ -74,34 +82,32 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 %
 %	Repeat a Sequence a number of times and report results.
 %
+%	Sequence should be the atomic name of one of the combat
+%	sequences known to the system; see sequence_simulation/3 for a
+%	list thereof.
+%
 %	Rollouts is the number of times Sequence should be simulated.
 %
 rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
-	atom_concat(Sequence, '_sequence', Seq)
-	,rollouts(Rollouts, Seq, [Attacker, Defender], Results)
-	/*,forall(member(Survivors-I, Results)
-	       ,(length(Survivors, L)
-		,format('~w Rollout: I Survivors: ~w~n', [I, L]))
-	       )*/
-	,format('Completed ~w ~w rollouts~n', [Seq, Rollouts])
+	rollouts(Rollouts, Sequence, [Attacker, Defender], Results)
+	,format('Completed ~w ~w rollouts~n', [Sequence, Rollouts])
 	,findall(N
 		,(member(S-_J, Results)
 		 ,length(S, N)
 		 )
 		,Rs)
 	,average(Rs, Av)
-	,format('Average number of survivors per rollout: ~w~n', [Av])
-	%,format('All results: ~w~n', [Rs])
-	.
+	,format('Average number of survivors per rollout: ~w~n', [Av]).
+
 
 
 %!	rollouts(+N, +Sequence, +Params, -Results) is det.
 %
 %	Repeat Sequence the given Number of times.
 %
-%	Sequence should be the name of a predicate simulating some
-%	aspect of the WH40K game, most notably combat, such as
-%	shooting_sequence (currently, the only one implemented).
+%	Sequence should be the atomic name of one of the combat
+%	sequences known to the system; see sequence_simulation/3 for a
+%	list thereof.
 %
 %	Params should be a list of arguments to be passed to Sequence,
 %	in the order in which Sequence expects to see those arguments.
@@ -144,8 +150,9 @@ rollouts(N, S, Ps, Rs):-
 %	defender.
 %
 sequence_simulation(S, Ps, Rs):-
-	append(Ps, [Rs], Ps_Rs)
-	,G =.. [call|[S|Ps_Rs]]
+	atom_concat(S, '_sequence', S_)
+	,append(Ps, [Rs], Ps_Rs)
+	,G =.. [call|[S_|Ps_Rs]]
 	,G.
 
 
