@@ -41,8 +41,8 @@
 unit(lord_of_contagion, 'Lord of Contagion', chaos).
 unit(kv128_stormsurge, 'KV128 Stormsurge', tau_empire).
 unit(strike_team, 'Strike Team', tau_empire).
+unit(tactical_drones, 'Tactical Drones', tau_empire).
 unit(tactical_squad, 'Tactical Squad', adeptus_astartes).
-
 
 
 %!	battlefield_role(?ID, ?Role) is semidet.
@@ -67,6 +67,7 @@ unit(tactical_squad, 'Tactical Squad', adeptus_astartes).
 battlefield_role(lord_of_contagion, hq).
 battlefield_role(kv128_stormsurge, lord_of_war).
 battlefield_role(strike_team,troops).
+battlefield_role(tactical_drones,fast_attack).
 battlefield_role(tactical_squad,troops).
 
 
@@ -78,6 +79,7 @@ battlefield_role(tactical_squad,troops).
 power(lord_of_contagion, 9).
 power(kv128_stormsurge, 22).
 power(strike_team,3).
+power(tactical_drones,2).
 power(tactical_squad,5).
 
 
@@ -104,6 +106,9 @@ unit_profiles(strike_team,fire_warrior,6,5+,4+,3,3,1,1,6,4+).
 unit_profiles(strike_team,fire_warrior_shasui,6,5+,4+,3,3,1,1,7,4+).
 unit_profiles(strike_team,ds8_tactical_support_turret,nil,nil,4+,3,3,1,0,4,4+).
 unit_profiles(strike_team,mv36_guardian_drone,8,5+,5+,3,4,1,1,6,4+).
+unit_profiles(tactical_drones,mv1_gun_drone,8,5,5,3,4,1,1,6,4+).
+unit_profiles(tactical_drones,mv4_shield_drone,8,5,5,3,4,1,1,6,4+).
+unit_profiles(tactical_drones,mv7_marker_drone,8,5,5,3,4,1,1,6,4+).
 unit_profiles(tactical_squad,space_marine,6,3+,3+,4,4,1,1,7,3+).
 unit_profiles(tactical_squad,space_marine_sergeant,6,3+,3+,4,4,1,2,8,3+).
 
@@ -125,6 +130,9 @@ damaged_profiles(kv128_stormsurge,5,1,[4+,8,3]).
 unit_composition(lord_of_contagion,single_model,1).
 unit_composition(kv128_stormsurge,single_model,1).
 unit_composition(strike_team,fire_warrior,5).
+% Veeery bad. A tactical_drones unit can include 4 "tactical drones"
+% each of which can be one of three types of drone. Gaddammit.
+unit_composition(tactical_drones,tactical_drone,4).
 unit_composition(tactical_squad,space_marine_sergeant,1).
 unit_composition(tactical_squad,space_marine,4).
 
@@ -174,15 +182,26 @@ unit_composition(tactical_squad,space_marine,4).
 %	The more complicated cases with multiple models in a single slot
 %	will still suck.
 %
+%	@tbd Some options represent models chosen from different units
+%	with their own unit_profiles. For instance, this is the case
+%	with T'au Tactical Drones that can accompany Strike Teams (and
+%	other units). These will have to be represented with a compound
+%	unit(N) where N the name of the model that can be selected as a
+%	unit composition option. The rules for including such models in
+%	a unit should be handled separately- they can't very well be
+%	represented as unit clauses, innit.
+%
 unit_composition_options(lord_of_contagion, nil, nil, nil, nil, nil).
 unit_composition_options(kv128_stormsurge, nil, nil, nil, nil, nil).
 unit_composition_options(strike_team,fire_warrior,+5,nil,nil,+2).
 unit_composition_options(strike_team,fire_warrior,+7,nil,nil,+3).
 unit_composition_options(strike_team,fire_warrior_shasui,1,fire_warrior,1,0).
-unit_composition_options(strike_team,tactical_drone,2,nil,nil,+1).
-unit_composition_options(strike_team,[tactical_drone
+unit_composition_options(strike_team,unit(tactical_drone),2,nil,nil,+1).
+unit_composition_options(strike_team,[unit(tactical_drone)
 				     ,mv36_guardian_drone],[1,1],nil,nil,+1).
 unit_composition_options(strike_team,ds8_tactical_support_turret,+1,nil,nil,0).
+unit_composition_options(tactical_drones,tactical_drone,+4,nil,nil,+2).
+unit_composition_options(tactical_drones,tactical_drone,+8,nil,nil,+4).
 unit_composition_options(tactical_squad,space_marine,+5,nil,nil,+4).
 
 
@@ -207,17 +226,12 @@ wargear(fire_warrior_shasui,pulse_rifle,1).
 wargear(fire_warrior_shasui,photon_grenade,1).
 wargear(ds8_tactical_support_turret,missile_pod,1).
 wargear(ds8_tactical_support_turret,smart_missile_system,1).
-% Tactical drones will require special treatment because
-% they can be both a separate unit and a type of model.
-% Or will they?
-wargear(tactical_drone,pulse_carbine,2).
-wargear(tactical_drone,markerlight,1).
-%wargear(tactical_drone,shield_generator,1).
+wargear(mv36_guardian_drone,guardian_field,1).
 % Shield and guardian drones don't have wargear but instead
 % generate a shield or guardian field. How to reprsent this?
-%wargear(mv1_gun_drone,pulse_carbine,2).
-%wargear(mv36_guardian_drone,guardian_field,1).
-%wargear(mv4_shield_drone,shield_generator,1)
+wargear(mv1_gun_drone,pulse_carbine,2).
+wargear(mv4_shield_drone,shield_generator,1).
+wargear(mv7_marker_drone,markerlight,1).
 wargear(space_marine,boltgun,1).
 wargear(space_marine,bolt_pistol,1).
 wargear(space_marine,frag_grenade,1).
@@ -291,6 +305,12 @@ abilities(strike_team, drone_support).
 abilities(strike_team, saviour_protocols).
 abilities(strike_team, guardian_field).
 abilities(strike_team, ds8_tactical_support_turret).
+abilities(tactical_drones, for_the_greater_good).
+abilities(tactical_drones, drone_support).
+abilities(tactical_drones, saviour_protocols).
+abilities(tactical_drones, threat_identification_protocols).
+abilities(tactical_drones, shield_generator).
+abilities(tactical_drones, stable_platform).
 abilities(tactical_squad,and_the_shall_know_no_fear).
 abilities(tactical_squad,combat_squads).
 
@@ -368,6 +388,8 @@ faction_keyword(kv128_stormsurge,tau_empire).
 faction_keyword(kv128_stormsurge,<sept>).
 faction_keyword(strike_team,tau_empire).
 faction_keyword(strike_team,<sept>).
+faction_keyword(tactical_drones,tau_empire).
+faction_keyword(tactical_drones,<sept>).
 faction_keyword(tactical_squad,imperium).
 faction_keyword(tactical_squad,adeptus_astartes).
 faction_keyword(tactical_squad,<chapter>).
@@ -393,6 +415,8 @@ keyword(strike_team,strike_team).
 keyword(mv36_guardian_drone,drone).
 keyword(mv36_guardian_drone,fly).
 keyword(mv36_guardian_drone,guardian_drone).
+keyword(tactical_drones,drone).
+keyword(tactical_drones,fly).
+keyword(tactical_drones,tactical_drones).
 keyword(tactical_squad,infantry).
 keyword(tactical_squad,tactical_squad).
-
