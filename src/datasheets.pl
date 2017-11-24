@@ -106,9 +106,9 @@ unit_profiles(strike_team,fire_warrior,6,5+,4+,3,3,1,1,6,4+).
 unit_profiles(strike_team,fire_warrior_shasui,6,5+,4+,3,3,1,1,7,4+).
 unit_profiles(strike_team,ds8_tactical_support_turret,nil,nil,4+,3,3,1,0,4,4+).
 unit_profiles(strike_team,mv36_guardian_drone,8,5+,5+,3,4,1,1,6,4+).
-unit_profiles(tactical_drones,mv1_gun_drone,8,5,5,3,4,1,1,6,4+).
-unit_profiles(tactical_drones,mv4_shield_drone,8,5,5,3,4,1,1,6,4+).
-unit_profiles(tactical_drones,mv7_marker_drone,8,5,5,3,4,1,1,6,4+).
+unit_profiles(tactical_drones,mv1_gun_drone,8,5+,5+,3,4,1,1,6,4+).
+unit_profiles(tactical_drones,mv4_shield_drone,8,5+,5+,3,4,1,1,6,4+).
+unit_profiles(tactical_drones,mv7_marker_drone,8,5+,5+,3,4,1,1,6,4+).
 unit_profiles(tactical_squad,space_marine,6,3+,3+,4,4,1,1,7,3+).
 unit_profiles(tactical_squad,space_marine_sergeant,6,3+,3+,4,4,1,2,8,3+).
 
@@ -344,6 +344,11 @@ weapons(lord_of_contagion, plaguereaper-1).
 %	different clause with the name of the profile given in Profile.
 %	Weapons with a single profile have the atom "base" in that
 %	position, instead.
+%
+%	Use the following template to fill in weapon stats quickly:
+%	==
+%	weapon(Id,Profile,Range,Type,S,AP,D,Abilities)
+%	==
 %
 %
 weapon(plaguereaper, base, melee, melee, +2, -3, 3, [plague_weapon]).
