@@ -193,6 +193,16 @@ shooting_sequence(As, Ts, Ss):-
 	model_sets(As, Ms)
 	,shooting_sequence_(Ms, Ts, Ss).
 
+
+%!	shooting_sequence_(+Model_sets, +Defenders, -Survivors) is det.
+%
+%	Business end of shooting_sequence/3.
+%
+%	Operates on model-sets rather than a list of models (a.k.a. a
+%	unit).
+%
+shooting_sequence_(_, [], []):-
+	!.
 shooting_sequence_([], Ss, Ss):-
 	!.
 shooting_sequence_([Mi|Ms], Ts, Bind):-
@@ -214,6 +224,45 @@ shooting_sequence_([Mi|Ms], Ts, Bind):-
 	,remove_casualties(Rs, Ss)
 	,shooting_sequence_(Ms, Ss, Bind).
 
+
+/*
+Use for debugging.
+I know, right?
+
+shooting_sequence_(_, [], []):-
+	!.
+shooting_sequence_([], Ss, Ss):-
+	!.
+shooting_sequence_([Mi|Ms], Ts, Bind):-
+	Mi = [M1|_]
+	,model_value(M1, 'BS', BS)
+	,model_value(M1, 'wargear', Wg-_Num)
+	,weapon_value(Wg, 'S', S)
+	,weapon_value(Wg, 'AP', AP)
+	,weapon_value(Wg, 'D', D)
+	,writeln('Attacker values OK')
+	,writeln('Defenders':Ts)
+	,Ts = [T1|_]
+	,model_value(T1, 'T', T)
+	,writeln('Defender values OK')
+	,model_set_attacks(Mi, Mn, Wn, Pa, Wa)
+	,writeln('Model set attacks OK')
+	,number_of_attacks(Mn, Pa, Wa, Wn, As)
+	,writeln('Number of attacks OK')
+	,hit_roll(As, BS, Hn)
+	,writeln('Hit roll OK')
+	,wound_roll(Hn, S, T, Ws)
+	,writeln('Wound roll OK')
+	,allocate_wounds(Ws, Ts, Ms_Ws)
+	,writeln('Allocate wounds OK')
+	,saving_throws(Ms_Ws, AP, Fs)
+	,writeln('Saving throws OK')
+	,inflict_damage(Fs, D, Rs)
+	,writeln('Inflict damage OK')
+	,remove_casualties(Rs, Ss)
+	,writeln('Remove casualties OK')
+	,shooting_sequence_(Ms, Ss, Bind).
+*/
 
 
 %!	number_of_attacks(+M, +Pa, +Wa, +Wn, -A) is det.
