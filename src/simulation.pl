@@ -2,6 +2,7 @@
 		     ,n_rounds_simulation/4
 		     ,rollouts_report/3
 		     ,rollouts/4
+		     ,sequence_simulation/3
 		     ,shooting_sequence/3
 		     ,number_of_attacks/5
 		     ,hit_roll/3
@@ -53,16 +54,20 @@ n_rounds_simulation(N, S, Ps, Rs):-
 	atom_concat(S, '_sequence', S_)
 	,n_rounds_simulation(0, N, S_, Ps, Rs).
 
+
+%!	n_rounds_simulation(+I,+N,+Sequence,+Params,-Results) is det.
+%
+%	Business end of n_rounds_simulation/4.
+%
+%	Procesess N simulations, incrementing I until it matches N.
+%
 n_rounds_simulation(N, N, _, [_As, Ss], Ss):-
 	!.
 n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 	succ(I, I_)
-	% We're doing a single rollout - so Ss is attached
-	% to '1', the index of the single rollout.
-	% rollouts/3 is just a convenient way to abstract
-	% the sequence we want to simulate.
-	,rollouts(1, S, [As,Ds], [Ss-1])
+	,sequence_simulation(S, [As,Ds], Ss)
 	,n_rounds_simulation(I_, N, S, [As,Ss], Bind).
+
 
 
 %!	rollouts_report(+Rollouts,+Sequence,+Params) is det.
@@ -70,17 +75,6 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 %	Repeat a Sequence a number of times and report results.
 %
 %	Rollouts is the number of times Sequence should be simulated.
-%
-%	Sequence is the atomic name of the combat sequence to simulate,
-%	one of:
-%	* movement: Movement simulation
-%	* psychic: Psychic simulation
-%	* shooting: Simulate one round of shooting.
-%	* charge: Simulate one charge by one unit.
-%	* fighting: Simulate one round of melee between two units.
-%
-%	Currently, only shooting is implemented. "movement" is probably
-%	too complex to ever simulate convincingly.
 %
 rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
 	atom_concat(Sequence, '_sequence', Seq)
@@ -124,11 +118,35 @@ rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
 rollouts(N, S, Ps, Rs):-
 	findall(R-I
 	       ,(between(1, N, I)
-		,append(Ps, [R], Ps_R)
-		,G =.. [call|[S|Ps_R]]
-		,G
+		,sequence_simulation(S, Ps, R)
 		)
 	       ,Rs).
+
+
+
+%!	sequence_simulation(+Sequence, +Params, -Results) is det.
+%
+%	Simulate a combat Sequence.
+%
+%	Sequence is the atomic name of the combat sequence to simulate,
+%	one of:
+%	* movement: Movement simulation
+%	* psychic: Psychic simulation
+%	* shooting: Simulate one round of shooting.
+%	* charge: Simulate one charge by one unit.
+%	* fighting: Simulate one round of melee between two units.
+%
+%	Currently, only shooting is implemented. "movement" is probably
+%	too complex to ever simulate convincingly.
+%
+%	Params is a list of parameters for the specified Sequence,
+%	typically a list of units, namely two: an attacker and a
+%	defender.
+%
+sequence_simulation(S, Ps, Rs):-
+	append(Ps, [Rs], Ps_Rs)
+	,G =.. [call|[S|Ps_Rs]]
+	,G.
 
 
 
