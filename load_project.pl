@@ -5,6 +5,8 @@ user:file_search_path(src, project_root(src)).
 user:file_search_path(lib, project_root(lib)).
 user:file_search_path(data, project_root(data)).
 user:file_search_path(output, project_root(output)).
+user:file_search_path(mathemagicks, project_root(lib/mathemagicks/src)).
+
 
 :-doc_browser.
 
@@ -12,6 +14,7 @@ user:file_search_path(output, project_root(output)).
 :-use_module(src(dice)).
 :-use_module(src(model)).
 :-use_module(src(simulation)).
+:-use_module(mathemagicks(mathemagicks)).
 
 edit_files:-
 	edit(project_root(load_project))

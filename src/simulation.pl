@@ -1,4 +1,7 @@
-:-module(simulation, [rollouts/4
+:-module(simulation, [simulation_report/3
+		     ,n_rounds_simulation/4
+		     ,rollouts_report/3
+		     ,rollouts/4
 		     ,shooting_sequence/3
 		     ,number_of_attacks/5
 		     ,hit_roll/3
@@ -12,10 +15,90 @@
 :-use_module(src(unit)).
 :-use_module(src(model)).
 :-use_module(src(wargear)).
+:-use_module(mathemagicks(mathemagicks)).
 
 /** <module> Predicates to simulate combat between sets of models.
 
 */
+
+
+%!	simulation_report(+N, +Sequence, +Params) is det.
+%
+%	Run a simulation for N rounds and report the results.
+%
+simulation_report(N, S, Ps):-
+	n_rounds_simulation(N, S, Ps, Rs)
+	,format('Ran ~w rounds of ~w~n', [N,S])
+	,length(Rs, L)
+	,findall(Wi
+		,(member(Ri, Rs)
+		 ,model_value(Ri, 'W', Wi)
+		 )
+		,Ws)
+	,(   Ws \= []
+	->  average(Ws, Av)
+	;   Av = 0
+	)
+	,format('~w models survived with an average of ~w wounds:~n', [L,Av])
+	,forall(member(Ri, Rs)
+	       ,writeln(Ri)
+	       ).
+
+
+%!	n_rounds_simulation(+Rounds,+Sequence,+Params,-Results).
+%
+%	Run a simulation for N rounds.
+%
+n_rounds_simulation(N, S, Ps, Rs):-
+	atom_concat(S, '_sequence', S_)
+	,n_rounds_simulation(0, N, S_, Ps, Rs).
+
+n_rounds_simulation(N, N, _, [_As, Ss], Ss):-
+	!.
+n_rounds_simulation(I, N, S, [As,Ds], Bind):-
+	succ(I, I_)
+	% We're doing a single rollout - so Ss is attached
+	% to '1', the index of the single rollout.
+	% rollouts/3 is just a convenient way to abstract
+	% the sequence we want to simulate.
+	,rollouts(1, S, [As,Ds], [Ss-1])
+	,n_rounds_simulation(I_, N, S, [As,Ss], Bind).
+
+
+%!	rollouts_report(+Rollouts,+Sequence,+Params) is det.
+%
+%	Repeat a Sequence a number of times and report results.
+%
+%	Rollouts is the number of times Sequence should be simulated.
+%
+%	Sequence is the atomic name of the combat sequence to simulate,
+%	one of:
+%	* movement: Movement simulation
+%	* psychic: Psychic simulation
+%	* shooting: Simulate one round of shooting.
+%	* charge: Simulate one charge by one unit.
+%	* fighting: Simulate one round of melee between two units.
+%
+%	Currently, only shooting is implemented. "movement" is probably
+%	too complex to ever simulate convincingly.
+%
+rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
+	atom_concat(Sequence, '_sequence', Seq)
+	,rollouts(Rollouts, Seq, [Attacker, Defender], Results)
+	/*,forall(member(Survivors-I, Results)
+	       ,(length(Survivors, L)
+		,format('~w Rollout: I Survivors: ~w~n', [I, L]))
+	       )*/
+	,format('Completed ~w ~w rollouts~n', [Seq, Rollouts])
+	,findall(N
+		,(member(S-_J, Results)
+		 ,length(S, N)
+		 )
+		,Rs)
+	,average(Rs, Av)
+	,format('Average number of survivors per rollout: ~w~n', [Av])
+	%,format('All results: ~w~n', [Rs])
+	.
 
 
 %!	rollouts(+N, +Sequence, +Params, -Results) is det.
@@ -269,6 +352,12 @@ allocate_wounds([Mi-W|Ms], Hn, Acc, Bind):-
 	Hn_ is Hn - 1
 	,succ(W, Wi)
 	,allocate_wounds(Ms, Hn_, [Mi-Wi|Acc], Bind).
+
+
+% It should be possible to do wound allocation without having to
+% initialise every model to 0-wounds with a full pass-through
+% beforehand. Frex, I think the following kind of half-worked and I
+% might be able to make it full-work.
 
 /*allocate_wounds(_, 0, Ms, Ms):-
 	!.
