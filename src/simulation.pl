@@ -1,7 +1,7 @@
-:-module(simulation, [simulation_report/3
+:-module(simulation, [n_rounds_report/3
 		     ,n_rounds_simulation/4
-		     ,rollouts_report/3
-		     ,rollouts/4
+		     ,n_simulations_report/3
+		     ,n_simulations/4
 		     ,sequence_simulation/3
 		     ,shooting_sequence/3
 		     ,number_of_attacks/5
@@ -23,7 +23,7 @@
 */
 
 
-%!	simulation_report(+N, +Sequence, +Params) is det.
+%!	n_rounds_report(+N, +Sequence, +Params) is det.
 %
 %	Run a simulation for N rounds and report the results.
 %
@@ -31,7 +31,7 @@
 %	sequences known to the system; see sequence_simulation/3 for a
 %	list thereof.
 %
-simulation_report(N, S, Ps):-
+n_rounds_report(N, S, Ps):-
 	n_rounds_simulation(N, S, Ps, Rs)
 	,format('Ran ~w rounds of ~w~n', [N,S])
 	,length(Rs, L)
@@ -50,6 +50,7 @@ simulation_report(N, S, Ps):-
 	       ).
 
 
+
 %!	n_rounds_simulation(+Rounds,+Sequence,+Params,-Results).
 %
 %	Run a simulation for N rounds.
@@ -59,8 +60,7 @@ simulation_report(N, S, Ps):-
 %	list thereof.
 %
 n_rounds_simulation(N, S, Ps, Rs):-
-	atom_concat(S, '_sequence', S_)
-	,n_rounds_simulation(0, N, S_, Ps, Rs).
+	n_rounds_simulation(0, N, S, Ps, Rs).
 
 
 %!	n_rounds_simulation(+I,+N,+Sequence,+Params,-Results) is det.
@@ -78,7 +78,7 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 
 
 
-%!	rollouts_report(+Rollouts,+Sequence,+Params) is det.
+%!	n_simulations_report(+Rollouts,+Sequence,+Params) is det.
 %
 %	Repeat a Sequence a number of times and report results.
 %
@@ -88,8 +88,8 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 %
 %	Rollouts is the number of times Sequence should be simulated.
 %
-rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
-	rollouts(Rollouts, Sequence, [Attacker, Defender], Results)
+n_simulations_report(Rollouts, Sequence, [Attacker, Defender]):-
+	n_simulations(Rollouts, Sequence, [Attacker, Defender], Results)
 	,format('Completed ~w ~w rollouts~n', [Sequence, Rollouts])
 	,findall(N
 		,(member(S-_J, Results)
@@ -101,7 +101,7 @@ rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
 
 
 
-%!	rollouts(+N, +Sequence, +Params, -Results) is det.
+%!	n_simulations(+N, +Sequence, +Params, -Results) is det.
 %
 %	Repeat Sequence the given Number of times.
 %
@@ -121,7 +121,7 @@ rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
 %	Results is then bound to a list of results bound to the output
 %	of Sequence.
 %
-rollouts(N, S, Ps, Rs):-
+n_simulations(N, S, Ps, Rs):-
 	findall(R-I
 	       ,(between(1, N, I)
 		,sequence_simulation(S, Ps, R)
