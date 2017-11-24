@@ -8,17 +8,19 @@ user:file_search_path(output, project_root(output)).
 
 :-doc_browser.
 
-:-use_module(configuration).
+:-use_module(src(unit)).
 :-use_module(src(dice)).
-:-use_module(src(datasheets)).
+:-use_module(src(model)).
 :-use_module(src(simulation)).
 
 edit_files:-
 	edit(project_root(load_project))
 	,edit(project_root(configuration))
-	,edit(src(simulation))
 	,edit(src(datasheets))
+	,edit(src(simulation))
+	,edit(src(unit))
 	,edit(src(dice))
+	,edit(src(model))
 	.
 :-edit_files.
 
