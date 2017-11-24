@@ -1,4 +1,5 @@
-:-module(simulation, [shooting_sequence/3
+:-module(simulation, [rollouts/4
+		     ,shooting_sequence/3
 		     ,number_of_attacks/5
 		     ,hit_roll/3
 		     ,wound_roll/4
@@ -15,6 +16,37 @@
 /** <module> Predicates to simulate combat between sets of models.
 
 */
+
+
+%!	rollouts(+N, +Sequence, +Params, -Results) is det.
+%
+%	Repeat Sequence the given Number of times.
+%
+%	Sequence should be the name of a predicate simulating some
+%	aspect of the WH40K game, most notably combat, such as
+%	shooting_sequence (currently, the only one implemented).
+%
+%	Params should be a list of arguments to be passed to Sequence,
+%	in the order in which Sequence expects to see those arguments.
+%
+%	N is the number of times that Sequence should be executed with
+%	the given Params- i.e. every time Sequence runs, it runs with
+%	the same set of Params, although results should be expected to
+%	be different eacy time provided the Sequence involves some
+%	randomness (i.e. dice rolls).
+%
+%	Results is then bound to a list of results bound to the output
+%	of Sequence.
+%
+rollouts(N, S, Ps, Rs):-
+	findall(R-I
+	       ,(between(1, N, I)
+		,append(Ps, [R], Ps_R)
+		,G =.. [call|[S|Ps_R]]
+		,G
+		)
+	       ,Rs).
+
 
 
 %!	shooting_sequence(+Attacker, +Target, -Surviving) is det.
@@ -135,6 +167,8 @@ number_of_attacks(M, Pa, Wa, Wn, N):-
 %	@tbd Remember to wrap BS in ()'s, as in (5+), in the top-level
 %	as well as source code to avoid operator clashes.
 %
+hit_roll(0, _, 0):-
+	!.
 hit_roll(A, BS, Hn):-
 	roll_vs_tn(A, '1d6', BS, Hn).
 
@@ -149,12 +183,14 @@ hit_roll(A, BS, Hn):-
 %	models in the model-set; T is the thoughness characterisic of
 %	models in the target unit.
 %
-%	 Wn is then the number of hits that successfully wound,
-%	 calculated as the number of rolls on 1d6 that are equal to, or
-%	 higher than the target number determined by the relative values
-%	 of S and T. See to_wound/3 for details of the target number
-%	 determination.
+%	Wn is then the number of hits that successfully wound,
+%	calculated as the number of rolls on 1d6 that are equal to, or
+%	higher than the target number determined by the relative values
+%	of S and T. See to_wound/3 for details of the target number
+%	determination.
 %
+wound_roll(0, _, _, 0):-
+	!.
 wound_roll(Hn, S, T, Wn):-
 	to_wound(S, T, Tn)
 	,roll_vs_tn(Hn, '1d6', Tn, Wn).
@@ -200,21 +236,41 @@ to_wound(S, T, 6+):-
 %	allocation strategy defined in the configuration.
 %
 %	Ms is then a list of key-value pairs, Mi-Wi, where each Mi
-%	is a model in Us to which one or more wounds are allocated and
+%	is a model in Us to which zero or more wounds are allocated and
 %	Wi the number of wounds allocated to that model.
 %
+allocate_wounds(0, Us, Ms):-
+	!
+       ,findall(Ui-0
+	       ,(member(Ui,Us))
+	       ,Ms).
 allocate_wounds(Hn, Us, Ms):-
 	configuration:wound_allocation_strategy(S)
 	,wound_allocation_order(S, Us, Us_)
 	,! % cut off search for more S
-	,allocate_wounds(Us_, Hn, [], Ms).
+	,findall(Ui-0
+	       ,(member(Ui,Us_))
+	       ,Us2)
+	,allocate_wounds(Us2, Hn, [], Ms).
+
 
 
 %!	allocate_wounds(+Models,+Wounds,+Acc,-Bind) is det.
 %
 %	Business end of allocate_wounds/3.
 %
-allocate_wounds(_, 0, Ms, Ms):-
+allocate_wounds(Us, 0, Ms, Ms_):-
+	append(Us, Ms, Ms_)
+	,!.
+allocate_wounds([], Hn, Acc, Bind):-
+	!
+	,allocate_wounds(Acc, Hn, [], Bind).
+allocate_wounds([Mi-W|Ms], Hn, Acc, Bind):-
+	Hn_ is Hn - 1
+	,succ(W, Wi)
+	,allocate_wounds(Ms, Hn_, [Mi-Wi|Acc], Bind).
+
+/*allocate_wounds(_, 0, Ms, Ms):-
 	!.
 allocate_wounds([], Hn, Acc, Bind):-
 	!
@@ -228,6 +284,10 @@ allocate_wounds([Mi|Ms], Hn, Acc, Bind):-
 	Hn_ is Hn - 1
 	,allocate_wounds(Ms, Hn_, [Mi-1|Acc], Bind).
 
+allocate_wounds([Mi|Ms], Hn, Acc, Bind):-
+	Hn_ is Hn - 1
+	,allocate_wounds(Ms, Hn_, [Mi-1|Acc], Bind).
+*/
 
 
 %!	saving_throws(+Ms, +AP, -Fs) is det.
@@ -236,22 +296,23 @@ allocate_wounds([Mi|Ms], Hn, Acc, Bind):-
 %
 %	Ms is a list of key-value pairs Mi-Wi, where each Mi is a model
 %	and Wi the number of wounds allocated to this model in the
-%	Allocate Wounds step, as calculated by allocate_wounds/3, and Wi
-%	the number of wounds allocated to that model. AP is the Armour
-%	Penetration characteristic of the attacking model-set.
+%	Allocate Wounds step, as calculated by allocate_wounds/3. AP is
+%	the Armour Penetration characteristic of the attacking
+%	model-set.
 %
 %	Fs is then a list of key-value pairs, Mi-Fi, where each Mi is a
 %	model in Ms and each Fi is the number of saved failing throws
 %	rolled by that unit against the wounds allocated to it, i.e. the
-%	number of wounds remaining unsaved against this model.
+%	number of wounds remaining unsaved against this model. Fi can be
+%	0 (meaning the model made all its saving throws).
 %
 saving_throws(Ms, AP, Fs):-
 	findall(Mi-F
 	       ,(member(Mi-Ws, Ms)
 		,once(model_value(Mi,'Sv', Sv))
 		,roll_vs_tn_mod(Ws, '1d6', Sv, AP, R)
+		% F is unsaved wounds
 		,F is Ws - R
-		,F > 0
 		)
 	       ,Fs).
 
@@ -262,18 +323,21 @@ saving_throws(Ms, AP, Fs):-
 %	Calculate the damage taken by each model in a unit.
 %
 %	Ms is a set of key-value-pairs, Mi-Wi, where each Mi is a model
-%	that failed at least one save against a wound it was allocated,
-%	as calculatd by saving_throws/3 and each Wi is the number of
-%	such failed saves.
+%	that rolled a save against a wound it was allocated in the
+%	Saving Throw step, as calculatd by saving_throws/3 and each Wi
+%	is the number of saves the model failed. Wi can be 0, meaning
+%	the model made all of its saves.
 %
-%	Rs is the list of models in Ms with their remaining wounds W,
-%	reduced by D, times the number of unsaved wounds allocated to
+%	Rs is then the list of models in Ms with their remaining wounds
+%	W, reduced by D, times the number of unsaved wounds allocated to
 %	each, Wi. In other words, for each unsaved wound, a model takes
 %	full damage from an attack. And then takes some more. No mercy,
 %	Percy.
 %
 %	Note that Rs is not a key-value pair anymore: the number of
-%	wounds in each model/N term in Ms is updated destructively.
+%	wounds in each model/N term in Ms is updated destructively. This
+%	allows the same model-list (purged of the weak and unworthy) to
+%	be used in further combat steps.
 %
 %	@tbd Just for fun (and information) I could also add to the
 %	output the amount of damage the dying model took, binding a list
@@ -283,7 +347,7 @@ inflict_damage(Ms, D, Rs):-
 	findall(Mi
 	       ,(member(Mi-Fi, Ms)
 		,model_value(Mi, 'W', W)
-		,W_ is W - Fi * D
+		,W_ is W - (Fi * D)
 		,model_value(Mi, 'W', W_)
 		)
 	       ,Rs).
@@ -294,6 +358,10 @@ inflict_damage(Ms, D, Rs):-
 %
 %	Remove casualties from a set of Models.
 %
+%	Models should be a set of model/N terms, with N determined in
+%	the configuration. Surviving is a sub-set of models in Models
+%	that have more than 0 wounds remaining.
+%
 remove_casualties(Ms, Ss):-
 	findall(Mi
 	       ,(member(Mi, Ms)
@@ -301,4 +369,5 @@ remove_casualties(Ms, Ss):-
 		,Wi > 0
 		)
 	       ,Ss).
+
 
