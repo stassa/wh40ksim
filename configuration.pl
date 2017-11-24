@@ -1,4 +1,6 @@
 :-module(configuration, [model_characteristics/11
+			,weapon_characteristics/8
+			,wound_allocation_strategy/1
 			]).
 
 
@@ -17,3 +19,23 @@ model_characteristics(name,'M','WS','BS','S','T','W','A','Ld','Sv',wargear).
 % Would be nice to have the model's unit name also.
 %model_characteristics(unit,name,'M','WS','BS','S','T','W','A','Ld','Sv',wargear).
 
+
+%!	weapon_characteristics(?Id,?Profile,?Range,?Type,?S,?AP,?D,?Abilities)
+%!	is semidet.
+%
+%	Names of the fields in a weapon/8 term in datasheets module
+%	listing a weapon's characteristics.
+%
+%	Used to retrieve the named fields from weapon/8 terms.
+%
+weapon_characteristics('Id','Profile','Range','Type','S','AP','D','Abilities').
+
+
+%!	wound_allocation_strategy(?Strategy) is det.
+%
+%	A Strategy for allocating wounding hits to a unit's models.
+%
+%	Relevant to unit:wound_allocation_order/3, used to select
+%	clauses according to a preferred Strategy.
+%
+wound_allocation_strategy(fewer_wounds_first).

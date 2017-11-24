@@ -1,6 +1,7 @@
 :-module(unit, [model_sets/2
-	       ,model_set_attacks/4
-	       ,models_unit/3]).
+	       ,model_set_attacks/5
+	       ,models_unit/3
+	       ,wound_allocation_order/3]).
 
 :-use_module(src(model)).
 :-use_module(src(datasheets)).
@@ -30,7 +31,7 @@
 %	information is the model's profile.
 %
 models_unit(Cs, Un, Un-Us):-
-	findall(model(Nm,M,WS,BS,S,T,W,A,Ld,Sv,Wg)
+	findall(model(Nm,M,WS,BS,S,T,W,A,Ld,Sv,Wg-Num)
 	       ,(member(Nm-N, Cs)
 		,between(1, N, _)
 		,unit_profiles(_Id,Nm,M,WS,BS,S,T,W,A,Ld,Sv)
@@ -41,7 +42,7 @@ models_unit(Cs, Un, Un-Us):-
 		% the model, including each item once for its Num
 		% i.e. the number of times that item is equipped
 		% on the model.
-		,once(wargear(Nm, Wg, _Num))
+		,once(wargear(Nm, Wg, Num))
 		)
 	       ,Us).
 
@@ -74,15 +75,26 @@ model_sets(Us, Ss):-
 
 
 
-%!	model_set_attacks(+Model_set,+Models,+Profile_attacks,+Weapon_attacks)
-%!	is det
+%!	model_set_attacks(+Model_set,-Mn,-Wn,-Pa,-Wa) is det
 %
 %	Determine profile and weapon attack numbers for a Model_set.
 %
-model_set_attacks([M1|Ms], M, Pa, Wa):-
-	length([M1|Ms], M)
+%	Mn is the number of models in the Model_set; Wn is the numbers
+%	of a single weapon equipped by models in the set; Pa is the
+%	'A' value in the models' profile (their "profile attacks") and
+%	Wa the number of attacks on the profile of that weapon (its
+%	"weapon attacks").
+%
+%	This predicate is meant as a helper to get the required
+%	information for simulation:number_of_attacks/5. The name is a
+%	bit off- we're not actually calculating the attacks the model
+%	set can do, just getting the information required to do that.
+%	But it's a long name already.
+%
+model_set_attacks([M1|Ms], Mn, Wn, Pa, Wa):-
+	length([M1|Ms], Mn)
 	,model_value(M1, 'A', Pa)
-	,model_value(M1, wargear, Wg)
+	,model_value(M1, wargear, Wg-Wn)
 	,weapon(Wg,_,_,Type,_,_,_,_)
 	,weapon_attacks(Type, Wa).
 
@@ -93,12 +105,45 @@ model_set_attacks([M1|Ms], M, Pa, Wa):-
 %
 weapon_attacks(T, A):-
 	T =.. [_Type,A_]
-	% Datasheets define random attack numbers
+	% datasheets module defines random attack numbers
 	% as d-N, which is a bit off with the way
 	% die sizes are defined. Needs fixin'.
 	,(   A_ = d-N
 	 ->  roll(1, N, A)
 	 ;   A_ = A
 	 ).
+
+
+
+%!	wound_allocation_order(+Strategy, +Models, -Ordered) is det.
+%
+%	Determine wound allocation order for to the given Strategy.
+%
+%	Strategy is an atom selecting for different wound allocation
+%	orderings of the models in list Models.
+%
+%	Each Strategy determines the order in which successfully
+%	wounding hits are allocated to the models in Models.
+%
+%	Each i'th successfully wounding hit Wi should then be allocated
+%	to the i'th model in the re-Ordered Models list, Mi: the first
+%	wounding hit W1 is allocated to the first model in the Ordered
+%	list, M1, then the second wound to the second model and so on,
+%	until wounds or models run out.
+%
+%	This predicate only selects the wound allocation strategy and
+%	re-orders the models in a unit. Actual wound allocation is
+%	handled by simulation:allocate_wounds/3, according to the
+%	Strategy defined in configuration module.
+%
+%	Currently, known Strategy options are:
+%	* fewer_wounds_first: Allocates wounds to models with fewer
+%	remaining wounds first, then to the rest of the models without
+%	any specific order.
+%
+wound_allocation_order(fewer_wounds_first, Ms, Ms_):-
+	characteristic_index('W', I)
+	,sort(I, @>=, Ms, Ms_).
+
 
 

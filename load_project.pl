@@ -21,6 +21,7 @@ edit_files:-
 	,edit(src(unit))
 	,edit(src(dice))
 	,edit(src(model))
+	,edit(src(wargear))
 	.
 :-edit_files.
 
