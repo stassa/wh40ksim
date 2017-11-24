@@ -82,6 +82,7 @@ roll_vs_tn(K, J, N, Tn, R):-
 		 ,(between(1, K, I)
 		  ,roll(J,N,M)
 		  ,(   M >= Tn
+		      ,M > 1
 		   ->  H = 1
 		   ;   H = 0
 		   )
@@ -97,6 +98,12 @@ roll_vs_tn(K, J, N, Tn, R):-
 %	Alternative to roll_vs_tn/5 accepting dice in JdN notation and
 %	target number in N+ notation.
 %
+%	@tbd This and subsequent predicates testing a roll against a
+%	target number count unmodified rolls of 1 as fa failure. This
+%	seems to be a pretty consistent rule throughout combat, at
+%	least- but watch out for exceptions, which might require a lot
+%	of fiddly exception code.
+%
 roll_vs_tn(K, JdN, T, R):-
 	target_number(T, Tn)
 	,aggregate(sum(H)
@@ -104,6 +111,7 @@ roll_vs_tn(K, JdN, T, R):-
 		 ,(between(1, K, I)
 		  ,roll(JdN,M)
 		  ,(   M >= Tn
+		      ,M > 1
 		   ->  H = 1
 		   ;   H = 0
 		   )
@@ -123,6 +131,8 @@ roll_vs_tn_mod(K, J, N, Tn, Mod, R):-
 		  ,roll(J,N,M)
 		  ,M_ is M + Mod
 		  ,(   M_ >= Tn
+		   % Note test for _unmodified_ 1.
+		      ,M > 1
 		   ->  H = 1
 		   ;   H = 0
 		   )
@@ -146,6 +156,7 @@ roll_vs_tn_mod(K, JdN, T, Mod, R):-
 		  ,roll(JdN,M)
 		  ,M_ is M + Mod
 		  ,(   M_ >= Tn
+		      ,M > 1
 		   ->  H = 1
 		   ;   H = 0
 		   )
