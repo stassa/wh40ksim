@@ -203,6 +203,21 @@ wargear(kv128_stormsurge, pulse_blastcannon, 1).
 wargear(kv128_stormsurge, smart_missile_system, 2).
 wargear(fire_warrior,pulse_rifle,1).
 wargear(fire_warrior,photon_grenade,1).
+wargear(fire_warrior_shasui,pulse_rifle,1).
+wargear(fire_warrior_shasui,photon_grenade,1).
+wargear(ds8_tactical_support_turret,missile_pod,1).
+wargear(ds8_tactical_support_turret,smart_missile_system,1).
+% Tactical drones will require special treatment because
+% they can be both a separate unit and a type of model.
+% Or will they?
+wargear(tactical_drone,pulse_carbine,2).
+wargear(tactical_drone,markerlight,1).
+%wargear(tactical_drone,shield_generator,1).
+% Shield and guardian drones don't have wargear but instead
+% generate a shield or guardian field. How to reprsent this?
+%wargear(mv1_gun_drone,pulse_carbine,2).
+%wargear(mv36_guardian_drone,guardian_field,1).
+%wargear(mv4_shield_drone,shield_generator,1)
 wargear(space_marine,boltgun,1).
 wargear(space_marine,bolt_pistol,1).
 wargear(space_marine,frag_grenade,1).
