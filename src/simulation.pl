@@ -1,9 +1,9 @@
-:-module(simulation, [rollouts_report/4
-		     ,k_rollouts/5
+:-module(simulation, [k_simulations_report/4
+		     ,k_simulations/5
 		     ,n_rounds_report/3
 		     ,n_rounds_simulation/4
-		     ,n_simulations_report/3
-		     ,n_simulations/4
+		     ,n_rollouts_report/3
+		     ,n_rollouts/4
 		     ,sequence_simulation/3
 		     ,shooting_sequence/3
 		     ,number_of_attacks/5
@@ -23,15 +23,54 @@
 
 /** <module> Predicates to simulate combat between sets of models.
 
+Nomenclature
+============
+
+I feel the need to clarify the following terminology.
+
+In the context of this module, a "rollout" is a resolution of one combat
+sequence (i.e. one step of combat, like Shooting, Charging or Fighting).
+
+A "simulation" on the other hand is a resolution of multiple sequences,
+of the same or different types, possibly spread over more than one turn.
+
+The two types of calculation serve different purposes.
+
+Rollouts can be used to determine the results of multiple "static"
+repetitions of a sequence (i.e. runs where conditions such as distance
+or number of models don't change) and are useful for getting an idea of
+how lethal is an attacker, or how durable a defender, compared to an
+enemy.
+
+Simulations can calculate the results of multiple consecutive series of
+combat sequences taking into account dynamically changing conditions
+such as distance between models and models remaining in a unit and are
+useful to get an idea about how combat between units may turn out in an
+actual game.
+
+For instance, if we just want to find out how quickly a squadron of
+MV1 Gun Drones can decimate a Space Marine Tactical Squad in shooting,
+we could make 1000 rollouts and look at the average number of marines
+remaining standing after N=1, N=2 and N=3 rounds of shooting (hint:
+there's no reason to rollout with N > 3).
+
+If on the other hand, we want to see what happens if the Marines Advance
+against the gun drones, while the drones are shooting at them, we would
+run a simulation taking into account the initial distance between the
+two units and keeping track of how many marines are lost in each step,
+then possibly simulating a final Charge of the marines against the
+drones (hint: there's no reason to simulate any fighting- at least not
+if the charge succeeds).
+
 */
 
 
-%!	rollouts_report(+K, +N, +Sequence, +Params) is det.
+%!	k_simulations_report(+K, +N, +Sequence, +Params) is det.
 %
 %	Run K rollouts of N turns of Sequence and report results.
 %
-rollouts_report(K, N, S, Ps):-
-	k_rollouts(K, N, S, Ps, Rs)
+k_simulations_report(K, N, S, Ps):-
+	k_simulations(K, N, S, Ps, Rs)
 	,format('Ran ~w simulations of ~w rounds each.~n', [K,n])
 	,findall(L
 		,(member(Ri-_I, Rs)
@@ -43,14 +82,11 @@ rollouts_report(K, N, S, Ps):-
 
 
 
-%!	k_rollouts(+K, +N, +Sequence, +Params, -Results) is det.
+%!	k_simulations(+K, +N, +Sequence, +Params, -Results) is det.
 %
-%	Run K rollouts of N turns of the specified Sequence.
+%	Run K simulations of N turns of the specified Sequence.
 %
-%	Use this to simulate one unit shooting at another over the
-%	course of N rounds.
-%
-k_rollouts(K, N, S, Ps, Rs):-
+k_simulations(K, N, S, Ps, Rs):-
 	findall(R-I
 	       ,(between(1,K,I)
 		,n_rounds_simulation(N, S, Ps, R)
@@ -95,6 +131,10 @@ n_rounds_report(N, S, Ps):-
 %	sequences known to the system; see sequence_simulation/3 for a
 %	list thereof.
 %
+%	Use this to simulate one unit shooting at another over the
+%	course of N rounds, assuming that both units stay stationary,
+%	but keeping track of casualties in the target unit each round.
+%
 n_rounds_simulation(N, S, Ps, Rs):-
 	n_rounds_simulation(0, N, S, Ps, Rs).
 
@@ -114,7 +154,7 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 
 
 
-%!	n_simulations_report(+Rollouts,+Sequence,+Params) is det.
+%!	n_rollouts_report(+Rollouts,+Sequence,+Params) is det.
 %
 %	Repeat a Sequence a number of times and report results.
 %
@@ -124,9 +164,9 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 %
 %	Rollouts is the number of times Sequence should be simulated.
 %
-n_simulations_report(Rollouts, Sequence, [Attacker, Defender]):-
-	n_simulations(Rollouts, Sequence, [Attacker, Defender], Results)
-	,format('Completed ~w ~w simulations~n', [Rollouts,Sequence])
+n_rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
+	n_rollouts(Rollouts, Sequence, [Attacker, Defender], Results)
+	,format('Completed ~w ~w rollouts~n', [Rollouts,Sequence])
 	,findall(N
 		,(member(S-_J, Results)
 		 ,length(S, N)
@@ -137,7 +177,7 @@ n_simulations_report(Rollouts, Sequence, [Attacker, Defender]):-
 
 
 
-%!	n_simulations(+N, +Sequence, +Params, -Results) is det.
+%!	n_rollouts(+N, +Sequence, +Params, -Results) is det.
 %
 %	Repeat Sequence the given Number of times.
 %
@@ -157,7 +197,7 @@ n_simulations_report(Rollouts, Sequence, [Attacker, Defender]):-
 %	Results is then bound to a list of results bound to the output
 %	of Sequence.
 %
-n_simulations(N, S, Ps, Rs):-
+n_rollouts(N, S, Ps, Rs):-
 	findall(R-I
 	       ,(between(1, N, I)
 		,sequence_simulation(S, Ps, R)
