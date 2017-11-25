@@ -10,11 +10,13 @@ user:file_search_path(mathemagicks, project_root(lib/mathemagicks/src)).
 
 :-doc_browser.
 
+% Although first four are loaded by simulation
+% It's nice to have them at the top-level also.
+:-use_module(src(datasheets)).
 :-use_module(src(unit)).
 :-use_module(src(dice)).
 :-use_module(src(model)).
 :-use_module(src(simulation)).
-:-use_module(mathemagicks(mathemagicks)).
 
 edit_files:-
 	edit(project_root(load_project))

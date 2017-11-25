@@ -1,4 +1,6 @@
-:-module(simulation, [n_rounds_report/3
+:-module(simulation, [rollouts_report/4
+		     ,k_rollouts/5
+		     ,n_rounds_report/3
 		     ,n_rounds_simulation/4
 		     ,n_simulations_report/3
 		     ,n_simulations/4
@@ -12,7 +14,8 @@
 		     ,inflict_damage/3
 		     ]).
 
-:-use_module(src(datasheets)).
+:-use_module(src(dice)).
+:-use_module(src(datasheets), [op(200,yf,+)]). % Just the op.
 :-use_module(src(unit)).
 :-use_module(src(model)).
 :-use_module(src(wargear)).
@@ -21,6 +24,39 @@
 /** <module> Predicates to simulate combat between sets of models.
 
 */
+
+
+%!	rollouts_report(+K, +N, +Sequence, +Params) is det.
+%
+%	Run K rollouts of N turns of Sequence and report results.
+%
+rollouts_report(K, N, S, Ps):-
+	k_rollouts(K, N, S, Ps, Rs)
+	,format('Ran ~w simulations of ~w rounds each.~n', [K,n])
+	,findall(L
+		,(member(Ri-_I, Rs)
+		 ,length(Ri, L)
+		 )
+		,Ls)
+	,average(Ls, Av)
+	,format('On average ~w models survived for ~w rounds.~n', [Av,N]).
+
+
+
+%!	k_rollouts(+K, +N, +Sequence, +Params, -Results) is det.
+%
+%	Run K rollouts of N turns of the specified Sequence.
+%
+%	Use this to simulate one unit shooting at another over the
+%	course of N rounds.
+%
+k_rollouts(K, N, S, Ps, Rs):-
+	findall(R-I
+	       ,(between(1,K,I)
+		,n_rounds_simulation(N, S, Ps, R)
+		)
+	       ,Rs).
+
 
 
 %!	n_rounds_report(+N, +Sequence, +Params) is det.
@@ -90,7 +126,7 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 %
 n_simulations_report(Rollouts, Sequence, [Attacker, Defender]):-
 	n_simulations(Rollouts, Sequence, [Attacker, Defender], Results)
-	,format('Completed ~w ~w rollouts~n', [Sequence, Rollouts])
+	,format('Completed ~w ~w simulations~n', [Rollouts,Sequence])
 	,findall(N
 		,(member(S-_J, Results)
 		 ,length(S, N)
@@ -249,7 +285,6 @@ shooting_sequence_([Mi|Ms], Ts, Bind):-
 	,remove_casualties(Rs, Ss)
 	,shooting_sequence_(Ms, Ss, Bind).
 
-
 /*
 Use for debugging.
 I know, right?
@@ -286,6 +321,42 @@ shooting_sequence_([Mi|Ms], Ts, Bind):-
 	,writeln('Inflict damage OK')
 	,remove_casualties(Rs, Ss)
 	,writeln('Remove casualties OK')
+	,shooting_sequence_(Ms, Ss, Bind).
+*/
+
+/*
+shooting_sequence_(_, [], []):-
+	!.
+shooting_sequence_([], Ss, Ss):-
+	!.
+shooting_sequence_([Mi|Ms], Ts, Bind):-
+	Mi = [M1|_]
+	,model_value(M1, 'BS', BS)
+	,model_value(M1, 'wargear', Wg-_Num)
+	,weapon_value(Wg, 'S', S)
+	,weapon_value(Wg, 'AP', AP)
+	,weapon_value(Wg, 'D', D)
+	,writeln('Attacker values OK')
+	,writeln('Defenders':Ts)
+	,Ts = [T1|_]
+	,model_value(T1, 'T', T)
+	,writeln('Defender values OK')
+	,model_set_attacks(Mi, Mn, Wn, Pa, Wa)
+	,writeln('Model set attacks':Mn/Wn/Pa/Wa)
+	,number_of_attacks(Mn, Pa, Wa, Wn, As)
+	,writeln('Number of attacks':As)
+	,hit_roll(As, BS, Hn)
+	,writeln('Hit roll':Hn)
+	,wound_roll(Hn, S, T, Ws)
+	,writeln('Wound roll':Ws)
+	,allocate_wounds(Ws, Ts, Ms_Ws)
+	,writeln('Allocate wounds':Ms_Ws)
+	,saving_throws(Ms_Ws, AP, Fs)
+	,writeln('Saving throws':Fs)
+	,inflict_damage(Fs, D, Rs)
+	,writeln('Inflict damage':Rs)
+	,remove_casualties(Rs, Ss)
+	,writeln('Remove casualties':Ss)
 	,shooting_sequence_(Ms, Ss, Bind).
 */
 
@@ -472,9 +543,13 @@ allocate_wounds([Mi|Ms], Hn, Acc, Bind):-
 saving_throws(Ms, AP, Fs):-
 	findall(Mi-F
 	       ,(member(Mi-Ws, Ms)
-		,once(model_value(Mi,'Sv', Sv))
-		,roll_vs_tn_mod(Ws, '1d6', Sv, AP, R)
-		% F is unsaved wounds
+		,(   Ws > 0
+		->   once(model_value(Mi,'Sv', Sv))
+		     % R is successful saves
+		    ,roll_vs_tn_mod(Ws, '1d6', Sv, AP, R)
+		 ;   R = 0
+		 )
+		% F is unsaved allocated wounds
 		,F is Ws - R
 		)
 	       ,Fs).

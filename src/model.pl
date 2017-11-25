@@ -1,8 +1,7 @@
 :-module(model, [characteristic_index/2
 		,model_value/3]).
 
-:-use_module(project_root(configuration)).
-:-use_module(src(datasheets)).
+:-use_module(project_root(configuration)). % Yes it is.
 
 
 %!	characteristic_index(+Characteristic, -Index) is det.
