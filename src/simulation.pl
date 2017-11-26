@@ -10,7 +10,7 @@
 		     ,hit_roll/4
 		     ,wound_roll/4
 		     ,allocate_wounds/3
-		     ,saving_throws/3
+		     ,saving_throws/4
 		     ,inflict_damage/3
 		     ]).
 
@@ -145,12 +145,12 @@ n_rounds_simulation(N, S, Ps, Rs):-
 %
 %	Procesess N simulations, incrementing I until it matches N.
 %
-n_rounds_simulation(N, N, _, [_As, Ss, [_D, _Mv]], Ss):-
+n_rounds_simulation(N, N, _, [_As, Ss, [_D, _Mv, _Cv]], Ss):-
 	!.
-n_rounds_simulation(I, N, S, [As,Ds,[D,Mv]], Bind):-
+n_rounds_simulation(I, N, S, [As,Ds,[D,Mv,Cv]], Bind):-
 	succ(I, I_)
-	,sequence_simulation(S, [As,Ds,[D,Mv]], Ss)
-	,n_rounds_simulation(I_, N, S, [As,Ss,[D,Mv]], Bind).
+	,sequence_simulation(S, [As,Ds,[D,Mv,Cv]], Ss)
+	,n_rounds_simulation(I_, N, S, [As,Ss,[D,Mv,Cv]], Bind).
 
 
 
@@ -240,11 +240,12 @@ sequence_simulation(S, Ps, Rs):-
 %	Attacker and Target must both be units, given as lists of
 %	model/N terms (see configuration:model_characteristics/N).
 %
-%	Status should be a list: [D, M] where D the distance of Attacker
-%	to Defender on the battlefield (counted in inches, but given as
-%	an integer without any diacriticals, please) and M the last
-%	movement action of Attacker. Currently, the following movement
-%	actions are recognised:
+%	Status should be a list: [D, M, C] where D the distance of
+%	Attacker to Defender on the battlefield (counted in inches, but
+%	given as an integer without any diacriticals, please); M the
+%	last movement action of Attacker; and C the unit's cover value
+%	(1 if it's in cover, 0 otherwise). Currently, the following
+%	movement actions are recognised:
 %	* none: The unit remained immobile on the battlefield
 %	* standard: The unit made a standard move last round.
 %	* advance: The unit advanced in the last round.
@@ -317,7 +318,7 @@ shooting_sequence_(_, [], [], _):-
 	!.
 shooting_sequence_([], Ss, Ss, _):-
 	!.
-shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv]):-
+shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv, Cv]):-
 	Mi = [M1|_]
 	,model_value(M1, 'BS', BS)
 	,model_value(M1, 'wargear', Wg-_Num)
@@ -331,10 +332,10 @@ shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv]):-
 	,hit_roll(As, BS, P, Hn)
 	,wound_roll(Hn, S, T, Ws)
 	,allocate_wounds(Ws, Ts, Ms_Ws)
-	,saving_throws(Ms_Ws, AP, Fs)
+	,saving_throws(Ms_Ws, AP, Cv, Fs)
 	,inflict_damage(Fs, D, Rs)
 	,remove_casualties(Rs, Ss)
-	,shooting_sequence_(Ms, Ss, Bind, [Ds, Mv]).
+	,shooting_sequence_(Ms, Ss, Bind, [Ds, Mv, Cv]).
 
 
 
@@ -534,13 +535,14 @@ allocate_wounds([Mi|Ms], Hn, Acc, Bind):-
 %	number of wounds remaining unsaved against this model. Fi can be
 %	0 (meaning the model made all its saving throws).
 %
-saving_throws(Ms, AP, Fs):-
+saving_throws(Ms, AP, Cv, Fs):-
 	findall(Mi-F
 	       ,(member(Mi-Ws, Ms)
 		,(   Ws > 0
 		->   once(model_value(Mi,'Sv', Sv))
-		     % R is successful saves
-		    ,roll_vs_tn_mod(Ws, '1d6', Sv, AP, R)
+		     % R is no. of successful saves
+		    , Mod is Cv + AP
+		    ,roll_vs_tn_mod(Ws, '1d6', Sv, Mod, R)
 		 ;   R = 0
 		 )
 		% F is unsaved allocated wounds
@@ -601,5 +603,3 @@ remove_casualties(Ms, Ss):-
 		,Wi > 0
 		)
 	       ,Ss).
-
-

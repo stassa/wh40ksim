@@ -124,6 +124,9 @@ roll_vs_tn(K, JdN, T, R):-
 %
 %	Roll K times JdN against a target number of T, modified by M.
 %
+%	R is the number of successful rolls against the target number,
+%	T modified by the modifier M.
+%
 roll_vs_tn_mod(K, J, N, Tn, Mod, R):-
 	aggregate(sum(H)
 		 ,(I, M, M_)
