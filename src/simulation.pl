@@ -237,8 +237,21 @@ sequence_simulation(S, Ps, Rs):-
 %
 %	Simulate a round of shooting against a Target.
 %
-%	Attacker and Target must both be units, given as lists of
-%	model/N terms (see configuration:model_characteristics/N).
+%	Attacker should be a list of lists, where elements of each
+%	sub-list are models with the same profile and wargear, known in
+%	this project as a "model-set". Note that the expectation of sets
+%	of models allows an Attacker to be composed of models from
+%	different units (which is correct- we want to be able to shoot
+%	one taget with multiple units).
+%
+%	Target should be a list of models, representing a target unit.
+%	We will not be looking at representing groups of units shooting
+%	at groups of units, since this is a) potentially to expensive
+%	and b) not that informative.
+%
+%	Elements of both the sub-lists in Attacker and of Target should
+%	be model/N terms with the arity and arguments defined in the
+%	configuration, in model_characteristics/N.
 %
 %	Status should be a list: [D, M, C] where D the distance of
 %	Attacker to Defender on the battlefield (counted in inches, but
@@ -302,9 +315,8 @@ sequence_simulation(S, Ps, Rs):-
 %	selection logic that looks for models with the same profile and
 %	wargear -which will therefore have the same BS, S, AP and D.
 %
-shooting_sequence(As, Ts, Ps, Ss):-
-	model_sets(As, Ms)
-	,shooting_sequence_(Ms, Ts, Ss, Ps).
+shooting_sequence(Ms, Ts, Ps, Ss):-
+	shooting_sequence_(Ms, Ts, Ss, Ps).
 
 
 %!	shooting_sequence_(+Model_sets,+Defenders,+Status,-Survivors) is
