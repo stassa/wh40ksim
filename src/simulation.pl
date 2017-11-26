@@ -5,9 +5,9 @@
 		     ,n_rollouts_report/3
 		     ,n_rollouts/4
 		     ,sequence_simulation/3
-		     ,shooting_sequence/3
+		     ,shooting_sequence/4
 		     ,number_of_attacks/5
-		     ,hit_roll/3
+		     ,hit_roll/4
 		     ,wound_roll/4
 		     ,allocate_wounds/3
 		     ,saving_throws/3
@@ -145,12 +145,12 @@ n_rounds_simulation(N, S, Ps, Rs):-
 %
 %	Procesess N simulations, incrementing I until it matches N.
 %
-n_rounds_simulation(N, N, _, [_As, Ss], Ss):-
+n_rounds_simulation(N, N, _, [_As, Ss, [_D, _Mv]], Ss):-
 	!.
-n_rounds_simulation(I, N, S, [As,Ds], Bind):-
+n_rounds_simulation(I, N, S, [As,Ds,[D,Mv]], Bind):-
 	succ(I, I_)
-	,sequence_simulation(S, [As,Ds], Ss)
-	,n_rounds_simulation(I_, N, S, [As,Ss], Bind).
+	,sequence_simulation(S, [As,Ds,[D,Mv]], Ss)
+	,n_rounds_simulation(I_, N, S, [As,Ss,[D,Mv]], Bind).
 
 
 
@@ -164,8 +164,8 @@ n_rounds_simulation(I, N, S, [As,Ds], Bind):-
 %
 %	Rollouts is the number of times Sequence should be simulated.
 %
-n_rollouts_report(Rollouts, Sequence, [Attacker, Defender]):-
-	n_rollouts(Rollouts, Sequence, [Attacker, Defender], Results)
+n_rollouts_report(Rollouts, Sequence, Params):-
+	n_rollouts(Rollouts, Sequence, Params, Results)
 	,format('Completed ~w ~w rollouts~n', [Rollouts,Sequence])
 	,findall(N
 		,(member(S-_J, Results)
@@ -233,12 +233,23 @@ sequence_simulation(S, Ps, Rs):-
 
 
 
-%!	shooting_sequence(+Attacker, +Target, -Surviving) is det.
+%!	shooting_sequence(+Attacker,+Target,+Status,-Surviving) is det.
 %
 %	Simulate a round of shooting against a Target.
 %
 %	Attacker and Target must both be units, given as lists of
 %	model/N terms (see configuration:model_characteristics/N).
+%
+%	Status should be a list: [D, M] where D the distance of Attacker
+%	to Defender on the battlefield (counted in inches, but given as
+%	an integer without any diacriticals, please) and M the last
+%	movement action of Attacker. Currently, the following movement
+%	actions are recognised:
+%	* none: The unit remained immobile on the battlefield
+%	* standard: The unit made a standard move last round.
+%	* advance: The unit advanced in the last round.
+%
+%	More such status information might be added in the future.
 %
 %	Surviving is a list of the models remaining in Target after one
 %	round of shooting by the models in Attacker.
@@ -290,23 +301,23 @@ sequence_simulation(S, Ps, Rs):-
 %	selection logic that looks for models with the same profile and
 %	wargear -which will therefore have the same BS, S, AP and D.
 %
-shooting_sequence(As, Ts, Ss):-
+shooting_sequence(As, Ts, Ps, Ss):-
 	model_sets(As, Ms)
-	,shooting_sequence_(Ms, Ts, Ss).
+	,shooting_sequence_(Ms, Ts, Ss, Ps).
 
 
-%!	shooting_sequence_(+Model_sets, +Defenders, -Survivors) is det.
+%!	shooting_sequence_(+Model_sets,+Defenders,+Status,-Survivors) is
+%!	det.
 %
 %	Business end of shooting_sequence/3.
 %
-%	Operates on model-sets rather than a list of models (a.k.a. a
-%	unit).
+%	Operates on model-sets rather than a list of models (a.k.a. a  unit).
 %
-shooting_sequence_(_, [], []):-
+shooting_sequence_(_, [], [], _):-
 	!.
-shooting_sequence_([], Ss, Ss):-
+shooting_sequence_([], Ss, Ss, _):-
 	!.
-shooting_sequence_([Mi|Ms], Ts, Bind):-
+shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv]):-
 	Mi = [M1|_]
 	,model_value(M1, 'BS', BS)
 	,model_value(M1, 'wargear', Wg-_Num)
@@ -315,90 +326,17 @@ shooting_sequence_([Mi|Ms], Ts, Bind):-
 	,weapon_value(Wg, 'D', D)
 	,Ts = [T1|_]
 	,model_value(T1, 'T', T)
-	,model_set_attacks(Mi, Mn, Wn, Pa, Wa)
+	,model_set_attacks(Mi, Ds, Mv, Mn, Wn, Pa, Wa, P)
 	,number_of_attacks(Mn, Pa, Wa, Wn, As)
-	,hit_roll(As, BS, Hn)
+	,hit_roll(As, BS, P, Hn)
 	,wound_roll(Hn, S, T, Ws)
 	,allocate_wounds(Ws, Ts, Ms_Ws)
 	,saving_throws(Ms_Ws, AP, Fs)
 	,inflict_damage(Fs, D, Rs)
 	,remove_casualties(Rs, Ss)
-	,shooting_sequence_(Ms, Ss, Bind).
+	,shooting_sequence_(Ms, Ss, Bind, [Ds, Mv]).
 
-/*
-Use for debugging.
-I know, right?
 
-shooting_sequence_(_, [], []):-
-	!.
-shooting_sequence_([], Ss, Ss):-
-	!.
-shooting_sequence_([Mi|Ms], Ts, Bind):-
-	Mi = [M1|_]
-	,model_value(M1, 'BS', BS)
-	,model_value(M1, 'wargear', Wg-_Num)
-	,weapon_value(Wg, 'S', S)
-	,weapon_value(Wg, 'AP', AP)
-	,weapon_value(Wg, 'D', D)
-	,writeln('Attacker values OK')
-	,writeln('Defenders':Ts)
-	,Ts = [T1|_]
-	,model_value(T1, 'T', T)
-	,writeln('Defender values OK')
-	,model_set_attacks(Mi, Mn, Wn, Pa, Wa)
-	,writeln('Model set attacks OK')
-	,number_of_attacks(Mn, Pa, Wa, Wn, As)
-	,writeln('Number of attacks OK')
-	,hit_roll(As, BS, Hn)
-	,writeln('Hit roll OK')
-	,wound_roll(Hn, S, T, Ws)
-	,writeln('Wound roll OK')
-	,allocate_wounds(Ws, Ts, Ms_Ws)
-	,writeln('Allocate wounds OK')
-	,saving_throws(Ms_Ws, AP, Fs)
-	,writeln('Saving throws OK')
-	,inflict_damage(Fs, D, Rs)
-	,writeln('Inflict damage OK')
-	,remove_casualties(Rs, Ss)
-	,writeln('Remove casualties OK')
-	,shooting_sequence_(Ms, Ss, Bind).
-*/
-
-/*
-shooting_sequence_(_, [], []):-
-	!.
-shooting_sequence_([], Ss, Ss):-
-	!.
-shooting_sequence_([Mi|Ms], Ts, Bind):-
-	Mi = [M1|_]
-	,model_value(M1, 'BS', BS)
-	,model_value(M1, 'wargear', Wg-_Num)
-	,weapon_value(Wg, 'S', S)
-	,weapon_value(Wg, 'AP', AP)
-	,weapon_value(Wg, 'D', D)
-	,writeln('Attacker values OK')
-	,writeln('Defenders':Ts)
-	,Ts = [T1|_]
-	,model_value(T1, 'T', T)
-	,writeln('Defender values OK')
-	,model_set_attacks(Mi, Mn, Wn, Pa, Wa)
-	,writeln('Model set attacks':Mn/Wn/Pa/Wa)
-	,number_of_attacks(Mn, Pa, Wa, Wn, As)
-	,writeln('Number of attacks':As)
-	,hit_roll(As, BS, Hn)
-	,writeln('Hit roll':Hn)
-	,wound_roll(Hn, S, T, Ws)
-	,writeln('Wound roll':Ws)
-	,allocate_wounds(Ws, Ts, Ms_Ws)
-	,writeln('Allocate wounds':Ms_Ws)
-	,saving_throws(Ms_Ws, AP, Fs)
-	,writeln('Saving throws':Fs)
-	,inflict_damage(Fs, D, Rs)
-	,writeln('Inflict damage':Rs)
-	,remove_casualties(Rs, Ss)
-	,writeln('Remove casualties':Ss)
-	,shooting_sequence_(Ms, Ss, Bind).
-*/
 
 
 %!	number_of_attacks(+M, +Pa, +Wa, +Wn, -A) is det.
@@ -416,18 +354,34 @@ shooting_sequence_([Mi|Ms], Ts, Bind):-
 %	A is calculated as the product M * Pa * Wa * Wn, the total
 %	number of attacks all the models in the unit can attempt.
 %
+%	@tbd After the introduction of movement and distance information
+%	in simulations and the use of the 8-arity version of
+%	model_set_attacks, there is a possible gotcha in this predicate:
+%	Pa (the number of profile attacks) is always emmmited as
+%	non-zero from model_set_attacks/8, i.e. we always retrieve the
+%	information in the unit's datasheet. Complications that make the
+%	unit incapable of shooting, namely, advancing (without assault
+%	weapons) are dealt sort of naturally, by allowing
+%	model_set_attacks/8 to report that Wa = 0 and then multiplying
+%	this 0 with M, Pa and Wn. This is "hidden" in the code so it
+%	might not be immediately obvious (and may therefore not be the
+%	best thing to do). In any case, keep this in mind.
+%
 number_of_attacks(M, Pa, Wa, Wn, N):-
 	N is M * Pa * Wa * Wn.
 
 
 
-%!	hit_roll(+A, +BS, -Hn).
+%!	hit_roll(+A, +BS, +M, -Hn).
 %
 %	Roll to hit with an attack from a set of models.
 %
 %	A is the number of attacks the model-set is making, as
 %	calculated by number_of_attacks/5. BS is the Ballistic Skill of
-%	the models in the model-set.
+%	the models in the model-set. M is a modifier (possibly, the sum
+%	of all applicable modifiers) to the to-hit roll, such as the -1
+%	modifier applied when a unit with a heavy weapon moved during a
+%	turn it fired its weapon etc.
 %
 %	Hn is then the number of successful hits, i.e. rolls on 1d6 that
 %	are equal to, or higher than the model-set's BS.
@@ -435,10 +389,10 @@ number_of_attacks(M, Pa, Wa, Wn, N):-
 %	@tbd Remember to wrap BS in ()'s, as in (5+), in the top-level
 %	as well as source code to avoid operator clashes.
 %
-hit_roll(0, _, 0):-
+hit_roll(0,_,_,0):-
 	!.
-hit_roll(A, BS, Hn):-
-	roll_vs_tn(A, '1d6', BS, Hn).
+hit_roll(A, BS, Ms, Hn):-
+	roll_vs_tn_mod(A, '1d6', BS, Ms, Hn).
 
 
 
