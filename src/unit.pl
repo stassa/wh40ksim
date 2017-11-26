@@ -1,7 +1,8 @@
-:-module(unit, [model_sets/2
+:-module(unit, [models_unit/3
+	       ,model_sets/2
+	       ,ordered_model_set/3
 	       ,model_set_attacks/5
 	       ,model_set_attacks/8
-	       ,models_unit/3
 	       ,wound_allocation_order/3]).
 
 :-use_module(src(model)).
@@ -73,6 +74,79 @@ model_sets(Us, Ss):-
 			,Gi)
 		)
 	       ,Ss).
+
+
+
+%!	ordered_model_set(+Models,+Ascending,+Descending,-Ordered) is
+%!	det.
+%
+%	Order Movels according to the given partial orderings.
+%
+%	Ascending and Descending should be terms (T1,T2,...,Tn) where
+%	each Ti is a profile characteristic of a model in the set, as
+%	defined in the configuration option model_characteristics/M.
+%
+ordered_model_set(Ms, PO, Os):-
+	once(current_functor(model_characteristics, A))
+	,A \= 0
+	,functor(T, model, A)
+	,term_variables(T, Vs)
+	,order_terms(PO, Vs, PO_)
+	,findall(T
+		,(order_by(PO_
+			  ,(member(T, Ms)
+			   )
+			  )
+		 )
+		,Os).
+
+
+%!	order_terms(+Terms,+Variables,-Sharing) is det.
+%
+%	Ensure Terms share with Variables.
+%
+%	Terms is a list of _ground_ desc/1 and asc/1 terms, whose single
+%	arguments should be model characteristics, for instance
+%	[desc('W'), asc('Sv')].
+%
+%	Variables is a list of unbound variables equal in length to the
+%	arity of the model_characteristics term in the configuration.
+%	Each variable in Variables is meant to bind to one argument of a
+%	model/N term in subsequent processing, specifically in the
+%	second argument of the order_by/2 call in  ordered_model_set/3.
+%
+%	order_terms/3 will bind to Sharing a list of the same Terms but
+%	with their atomic arguments swapped for the appropriate variable
+%	in Variables. The "appropriate variable" is the variable at
+%	position I in Variables, where I is the index reported by
+%	characteristic_index/2 for each Oi, where Oi one of the elements
+%	of Terms.
+%
+%	For example, in the following query, the ground terms desc('W')
+%	and asc('Sv') result in the list [desc(W), asc(Sv)] where W and
+%	Sv share with the 7th and 10th variable in the list of model
+%	characteristic variables :
+%	==
+%	?- unit:order_terms([desc('W'),asc('Sv')],[Name,M,WS,BS,S,T,W,A,Ld,Sv,Wargear],Os).
+%	Os = [desc(W), asc(Sv)].
+%	==
+%
+order_terms(PO, Vs, PO_):-
+	order_terms(PO, Vs, [], PO_).
+
+%!	order_terms(+Terms,+Vars,+Acc,-Bind) is det.
+%
+%	Business end of order_terms/3.
+%
+order_terms([], _, PO, OP):-
+	reverse(PO, OP)
+	,!.
+order_terms([Oi|PO], Vs, Acc, Bind):-
+	Oi =.. [O,Ai]
+	,once(characteristic_index(Ai, I))
+	,nth1(I, Vs, Vi)
+	,O_ =.. [O,Vi]
+	,order_terms(PO, Vs, [O_|Acc], Bind).
 
 
 
@@ -282,3 +356,4 @@ wound_allocation_order(fewer_wounds_first, Ms, Ms_):-
 
 
 
+unit_movement_rate.

@@ -39,6 +39,9 @@ characteristic_index(C, I):-
 %	and in a non-backtrackable manner (i.e. backtracking will not
 %	undo the bindings and change the value anew).
 %
+%	@tbd Models with "*" in their profiles will need special
+%	treatment when tretrieving their values.
+%
 model_value(M, C, V):-
 	% No idea what's going on here but current_functor/2
 	% Gets some functors that are not defined anywhere,
