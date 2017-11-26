@@ -3,7 +3,9 @@
 	       ,ordered_model_set/3
 	       ,model_set_attacks/5
 	       ,model_set_attacks/8
-	       ,wound_allocation_order/3]).
+	       ,model_set_move/2
+	       ,wound_allocation_order/3
+	       ]).
 
 :-use_module(src(model)).
 :-use_module(src(datasheets)).
@@ -324,6 +326,20 @@ type_attacks(N, A):-
 	 ).
 
 
+
+%!	model_set_move(+Models, -Rate) is det.
+%
+%	Determine the lowest Movement stat in Models.
+%
+%	Use this to decide how far a set of models can move in a
+%	movement phase without breaking unit coherency.
+%
+model_set_move(Ms, Mr):-
+	ordered_model_set(Ms, [asc('M')], [M|_])
+	,model_value(M, 'M', Mr).
+
+
+
 %!	wound_allocation_order(+Strategy, +Models, -Ordered) is det.
 %
 %	Determine wound allocation order for to the given Strategy.
@@ -353,7 +369,3 @@ type_attacks(N, A):-
 wound_allocation_order(fewer_wounds_first, Ms, Ms_):-
 	characteristic_index('W', I)
 	,sort(I, @>=, Ms, Ms_).
-
-
-
-unit_movement_rate.
