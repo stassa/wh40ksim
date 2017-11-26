@@ -11,6 +11,35 @@
 :-use_module(src(datasheets)).
 :-use_module(src(wargear)).
 
+/** <module> Units and model-sets.
+
+The predicates in this module provide a de facto definition of a unit as
+a set of model-sets, where each model-set is a set of models that share
+the same profile and wargear. This definition, which does not exist in
+WH40K rules, is meant to facilitate treating diverse models in a unit
+correctly during simulations.
+
+For instance, when determining the number of attacks a unit's models can
+make, we need to consider both the value of the models' profile Attack
+characteristic, as well as the attack value of their weapons and any
+modifiers to those characteristics bestowed by wargear. Since models
+with the same profile and wargear will make the same number of attacks
+(provided they also moved in the same way during the movement phase etc)
+and in order to avoid having to decide all of the above for each model
+separately, we split the unit in sets of models with the same profile
+and wargear, which we call model-sets.
+
+In terms of the Prolog code, a unit is a list-of-lists where each
+sub-list holds model/N terms with the same profile and wargear.
+
+Note that most predicates in this module will not check that a list of
+models is really a model-set, i.e. that all the models in the list have
+the same profile and wargear. This allows some units to be based as just
+lists of models, which is also sometimes useful.
+*/
+
+
+
 %!      models_unit(+Choices, +Unit_name, -Unit) is det.
 %
 %	Compose a Unit from the given model Choices.
