@@ -8,7 +8,7 @@ From: a friend in the old home.
 
 My very dearest O'Shova,
 
-A friend of ours in the Earth caste has forwarded me information on a new devide
+A friend of ours in the Earth caste has forwarded me information on a new device
 designed by our Engineers, which they call a Combat Emulator. The Fire caste has
 been using it to great effect to anticipate the actions of our enemies in combat
 and have already earned many accolades for their increased effectiveness in
