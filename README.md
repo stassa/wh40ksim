@@ -11,9 +11,9 @@ My very dearest O'Shova,
 
 A friend of ours in the Earth caste has forwarded me information on a new devide
 designed by our Engineers, which they call a Combat Emulator. The Fire caste has
-been using it to great effect to anticipate the movement of our enemies in
-combat and have already earned many accolades for their increased effectiveness
-in battle.
+been using it to great effect to anticipate the actions of our enemies in combat
+and have already earned many accolades for their increased effectiveness in
+battle.
 
 Although the device is still a mere prototype (the Earth caste friend says it's
 "still in beta") it can already simulate the outcome of a set of units firing
