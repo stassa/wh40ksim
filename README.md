@@ -26,17 +26,19 @@ account also- they often seem capable of turning the tide of battle, therefore,
 we must be prepared.
 
 The device still lacks significant data on most of our enemies, or even our own
-troops. You will see that only a few of our Fire cast troops are represented and
+troops. The Earth caste is working to include more of our existing intelligence
+but for the time being, only a few of our Fire caste troops are represented and
 just a handful of our enemies, specifically a couple of types of units of the
 Imperium of Man. I understand you've had some close encounters with their sort
 recently, so I decided to forward the schematics of the Combat Emulator to you,
 just in case you might find some use for it. 
 
-I expect you will want to pass on the schematics to a certain venerable Earth
-caste colleague of yours, who will perfectly suited to understand, employ and
-perhaps even begin improving the Emulator. For my part, I will make sure to keep
-you up-to-date with any new additions to the device from the Engineers over
-here.
+Unfortunately, I could not secure any documentation regarding the operation of
+the device, however I expect you will want to pass on the schematics to a
+certain venerable Earth caste colleague of yours, who will be perfectly capable
+of understanding how to use, and perhaps even begin improving, the Emulator. For
+my part, I will make sure to keep you up-to-date with any new additions to the
+device from the Engineers over here.
 
 For the Greater Good
 
