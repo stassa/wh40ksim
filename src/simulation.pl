@@ -160,9 +160,11 @@ scenario_simulation(S, Sc, As, Ds, Rs):-
 scenario_simulation(N, N, _, _, [_As,Ss,[D,_Ma,_Mt,_Cv]], Ss):-
 	format('Sim ends after ~w turns with attacker ~w" from target~n',[N,D])
 	,!.
-scenario_simulation(I, _, _, _, [_As,Ss,[1,_Ma,_Mt,_Cv]], Ss):-
-	% Shooting ends when taget is less than 1" away.
-	format('Sim ends after ~w turns with attacker ~w" from target~n',[I,1])
+scenario_simulation(I, _, S, _, [As,Ds,[1,Ma,_Mt,Cv]], Ss):-
+	% Shooting ends when taget is less than 1" away
+	% except for models armed with pistols.
+	sequence_simulation(S, [As, Ds, [1,Ma,Cv]], Ss)
+	,format('Sim ends after ~w turns with attacker ~w" from target~n',[I,1])
 	,!.
 scenario_simulation(I, N, S, Sc, [As,Ds,[D,Ma,Mt,Cv]], Bind):-
 	succ(I, I_)

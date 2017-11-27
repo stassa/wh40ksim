@@ -238,8 +238,12 @@ model_set_attacks([M1|Ms], D, M, Mn, Wn, Pa, Wa, P):-
 	,weapon_value(Wg, 'Range', R)
 	,Type =.. [T,N]
 	,(   D =< R
-	     % Units can't shoot at anemies less than 1" away.
-	     ,D >= 1
+	     % Units can't shoot at enemies less than 1" away.
+	     % except with pistols.
+	    ,D >= 1
+	 ->  weapon_attacks(T, N, D, R, M, Wa, P)
+	 ;   D =< R
+	    ,weapon = pistol
 	 ->  weapon_attacks(T, N, D, R, M, Wa, P)
 	 ;   Wa = 0
 	    ,P = 0
@@ -318,21 +322,21 @@ weapon_attacks(rapid_fire, N, D, R, M, A, P):-
 	 )
 	,P = 0.
 
-weapon_attacks(grenade, _, _, _, M, A, P):-
+weapon_attacks(grenade, N, _, _, M, A, P):-
 	!
 	,(   M = advance
 	 ->  A = 0
 	    ,P = 0
-	 ;   A = 1
+	 ;   type_attacks(N, A)
 	    ,P = 0
 	 ).
 
-weapon_attacks(pistol, _, _, _, M, A, P):-
+weapon_attacks(pistol, N, _, _, M, A, P):-
 	!
 	,(   M = advance
 	 ->  A = 0
 	    ,P = 0
-	 ;   A = 1
+	 ;   type_attacks(N, A)
 	    ,P = 0
 	 ).
 
