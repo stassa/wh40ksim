@@ -4,7 +4,6 @@ Warhammer 40k Combat simulator
 +++ Begin encrypted transmission +++
 
 To: Shas'O Vior'la Shovah Kais Mont'yr
-
 From: a friend in the old home.
 
 My very dearest O'Shova,
@@ -41,9 +40,7 @@ my part, I will make sure to keep you up-to-date with any new additions to the
 device from the Engineers over here.
 
 For the Greater Good
-
 Your old comrade in arms
-
 S.O.S.
 
 +++ End encrypted transmission +++
