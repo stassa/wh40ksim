@@ -23,3 +23,6 @@ weapon_value(Wg, C, V):-
 	,arg(N,T,C)
 	,!
 	,arg(N,W,V).
+% Hack until non-weapon wargear like shield generators are handled
+% properly.
+weapon_value(_, _, none(0)).

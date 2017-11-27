@@ -203,7 +203,7 @@ model_set_attacks([M1|Ms], Mn, Wn, Pa, Wa):-
 	length([M1|Ms], Mn)
 	,model_value(M1, 'A', Pa)
 	,model_value(M1, wargear, Wg-Wn)
-	,weapon(Wg,_,_,Type,_,_,_,_)
+	,weapon_value(Wg, 'Type', Type)
 	,weapon_attacks(Type, Wa).
 
 
