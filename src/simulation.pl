@@ -145,7 +145,7 @@ scenario_simulation(S, Sc, As, Ds, Rs):-
 	      ,target_cover(C,_)
 	      ]
 	,target_cover(C, V)
-	,scenario_simulation(0, N, S, Sc,[Ms,Ds_,[D,Ta,Tt,V]], Rs).
+	,scenario_simulation(1, N, S, Sc,[Ms,Ds_,[D,Ta,Tt,V]], Rs).
 
 
 %!	scenario_simulation(+I,+N,+S,+Sc,+Params,-Survivors) is det.
@@ -157,18 +157,17 @@ scenario_simulation(S, Sc, As, Ds, Rs):-
 %
 %	@tbd Remove the printouts.
 %
-scenario_simulation(I, _, shooting, _, [_As,Ss,[D,_Ma,_Mt,_Cv]], Ss):-
-	% Shooting ends when taget is less than 1" away.
-	D =< 1
-	,format('Sim ends after ~w turns with attacker ~w" from target~n', [I,D])
-	,!.
 scenario_simulation(N, N, _, _, [_As,Ss,[D,_Ma,_Mt,_Cv]], Ss):-
-	format('Sim ends after ~w turns with attacker ~w" from target~n', [N, D])
+	format('Sim ends after ~w turns with attacker ~w" from target~n',[N,D])
+	,!.
+scenario_simulation(I, _, _, _, [_As,Ss,[1,_Ma,_Mt,_Cv]], Ss):-
+	% Shooting ends when taget is less than 1" away.
+	format('Sim ends after ~w turns with attacker ~w" from target~n',[I,1])
 	,!.
 scenario_simulation(I, N, S, Sc, [As,Ds,[D,Ma,Mt,Cv]], Bind):-
 	succ(I, I_)
-	,sequence_simulation(S, [As, Ds, [D,Ma,Cv]], Ss)
 	,scenario_step(Sc, As, Ds, [D,Ma,Mt,Cv], [D_,Ma_,Mt_,Cv_])
+	,sequence_simulation(S, [As, Ds, [D_,Ma_,Cv_]], Ss)
 	,scenario_simulation(I_, N, S, Sc, [As, Ss, [D_,Ma_,Mt_,Cv_]], Bind).
 
 
@@ -226,9 +225,18 @@ scenario_step(Ss, As, Ds, [D,_Ma,_Mt,_Cv], [D_,Ta,Tt,V_]):-
 	% Will need to change that.
 	,flatten(As, As_)
 	,model_set_movement_distance(As_, Ta, Da)
+	% If any movement brings the two units closer
+	% than 1" together, they must stay put at 1".
 	,D1 is D + Da * Oa
-	,model_set_movement_distance(Ds, Tt, Dt)
-	,D_ is D1 + Dt * Ot
+	,(   D1 > 1
+	 ->  model_set_movement_distance(Ds, Tt, Dt)
+	    ,D2 is D1 + Dt * Ot
+	 ;   D2 = 1
+	)
+	,(   D2 < 1
+	 ->  D_ = 1
+	 ;   D_ = D2
+	 )
 	,target_cover(C, V_).
 
 
