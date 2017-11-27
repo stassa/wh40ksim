@@ -1,7 +1,6 @@
 :-module(unit, [models_unit/3
 	       ,model_sets/2
 	       ,ordered_model_set/3
-	       ,model_set_attacks/5
 	       ,model_set_attacks/8
 	       ,model_set_movement_distance/3
 	       ,model_set_move/2
@@ -185,35 +184,9 @@ order_terms([Oi|PO], Vs, Acc, Bind):-
 
 
 
-%!	model_set_attacks(+Model_set,-Mn,-Wn,-Pa,-Wa) is det.
-%
-%	Determine profile and weapon attack numbers for a Model_set.
-%
-%	Mn is the number of models in the Model_set; Wn is the numbers
-%	of a single weapon equipped by models in the set; Pa is the
-%	'A' value in the models' profile (their "profile attacks") and
-%	Wa the number of attacks on the profile of that weapon (its
-%	"weapon attacks").
-%
-%	This predicate is meant as a helper to get the required
-%	information for simulation:number_of_attacks/5. The name is a
-%	bit off- we're not actually calculating the attacks the model
-%	set can do, just getting the information required to do that.
-%	But it's a long name already.
-%
-
-model_set_attacks([M1|Ms], Mn, Wn, Pa, Wa):-
-	length([M1|Ms], Mn)
-	,model_value(M1, 'A', Pa)
-	,model_value(M1, wargear, Wg-Wn)
-	,weapon_value(Wg, 'Type', Type)
-	,weapon_attacks(Type, Wa).
-
-
-
 %!	model_set_attacks(+Model_set,+D,+M,-Mn,-Wn,-Pa,-Wa,-P) is det.
 %
-%	As model_set_attacks/5 but tracks distance, movement etc.
+%	Determine profile and weapon attack numbers for a Model_set.
 %
 %	D is the distance of the shooting unit to the target (rapid fire
 %	weapons double their attacks when in half-range to their
@@ -253,24 +226,6 @@ model_set_attacks([M1|Ms], Wg, D, M, Mn, Pa, Wa, P):-
 
 
 
-%!	weapon_attacks(+Type, -Attacks) is det.
-%
-%	Determine the number of Attacks a Weapon can make.
-%
-%	Naive version that doesn't care about anything but what's inside
-%	a weapon's type term (e.g. assault(1), heavy(d3) etc).
-%
-weapon_attacks(T, A):-
-	T =.. [_Type,A_]
-	% datasheets module defines random attack numbers
-	% as d-N, which is a bit off with the way
-	% die sizes are defined. Needs fixin'.
-	,(   A_ = d-N
-	 ->  roll(1, N, A)
-	 ;   A_ = A
-	 ).
-
-
 %!	weapon_attacks(+Type,+N,+D,+R,+M,-A,-P) is det.
 %
 %	As weapon_attacks/2 but also tracks Movement, Distance etc.
@@ -293,7 +248,7 @@ weapon_attacks(assault, N, _D, _R, M, A, P):-
 	->  A = N
 	   ,P = 0
 	;   M = advance
-	->  type_attacks(N, A)
+	->  A= N
 	   ,P = -1
 	;   A = 0
 	   ,P = 0
@@ -305,7 +260,7 @@ weapon_attacks(heavy, N, _D, _R, M, A, P):-
 	 ->  A = N
 	    ,P = -1
 	;    M = none
-	 ->  type_attacks(N, A)
+	 ->  A = N
 	    ,P = 0
 	;    A = 0
 	    ,P = 0
@@ -358,31 +313,6 @@ attack_multiplier(NdM, K, KNdM):-
 	die_size(NdM, N, _M)
 	,KN is N * K
 	,die_size(KNdM, KN, 6).
-
-
-%!	type_attacks(+Number, -Attacks) is det.
-%
-%	Determine number of attacks from weapon type value.
-%
-%	"Weapon type value" refers to the term encapsulated in weapon
-%	types, which is normally either a number or a die size, as for
-%	instance in heavy(D6) or assault(1) etc.
-%
-%	Number should be such a Weapon type value; Attacks is either the
-%	number in the WTV, or the result of a die roll with that die
-%	size.
-%
-%	@bug We shouldn't be rolling the dice for an attack now-
-%	instead, leave that up to the simulation or rollout. We'll need
-%	to recalculate in each round or rollout.
-%
-%
-type_attacks(N, A):-
-	(   N = d-M
-	 ->  roll(1, M, A)
-	 ;   number(N)
-	    ,A = N
-	 ).
 
 
 
