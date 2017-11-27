@@ -3,6 +3,7 @@
 	       ,ordered_model_set/3
 	       ,model_set_attacks/5
 	       ,model_set_attacks/8
+	       ,model_set_movement_distance/3
 	       ,model_set_move/2
 	       ,wound_allocation_order/3
 	       ]).
@@ -226,6 +227,9 @@ model_set_attacks([M1|Ms], Mn, Wn, Pa, Wa):-
 %	those are 0, the final number of attacks the model will be able
 %	to make will be 0.
 %
+%	@bug This should also take into account Overwatch rules. When a
+%	unit is charged, it gets an attack, no?
+%
 model_set_attacks([M1|Ms], D, M, Mn, Wn, Pa, Wa, P):-
 	length([M1|Ms], Mn)
 	,model_value(M1, 'A', Pa)
@@ -234,7 +238,8 @@ model_set_attacks([M1|Ms], D, M, Mn, Wn, Pa, Wa, P):-
 	,weapon_value(Wg, 'Range', R)
 	,Type =.. [T,N]
 	,(   D =< R
-	    ,D > 0 % otherwise, invalid
+	     % Units can't shoot at anemies less than 1" away.
+	     ,D >= 1
 	 ->  weapon_attacks(T, N, D, R, M, Wa, P)
 	 ;   Wa = 0
 	    ,P = 0
@@ -273,6 +278,8 @@ weapon_attacks(T, A):-
 %	penalty to hit rolls applied by some weapon types and movement
 %	combinations, e.g. when a unit armed with a heavy weapon moves
 %	it takes a -1 penalty to its rolls to hit, etc.
+%
+%	@bug This doesn't take fall_back into account.
 %
 weapon_attacks(assault, N, _D, _R, M, A, P):-
 	!
@@ -353,6 +360,28 @@ type_attacks(N, A):-
 	 ;   number(N)
 	    ,A = N
 	 ).
+
+
+
+%!	model_set_movement_distance(+Models,+Type,-Distance) is det.
+%
+%	Determine the Distance a model set can move.
+%
+model_set_movement_distance(_, none, 0):-
+	!.
+model_set_movement_distance(Ms, T, D):-
+	(   T = standard
+	;   T = fall_back
+	)
+	,!
+	,model_set_move(Ms, D).
+model_set_movement_distance(M, advance, D):-
+	!
+	,model_set_move(M, V)
+	,roll('1d6', A)
+	,D is V + A.
+model_set_movement_distance(_, charge, D):-
+	roll('2d6', D).
 
 
 

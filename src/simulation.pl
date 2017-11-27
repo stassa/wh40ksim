@@ -2,6 +2,7 @@
 		     ,k_simulations/5
 		     ,n_rounds_report/3
 		     ,n_rounds_simulation/4
+		     ,scenario_simulation/5
 		     ,n_rollouts_report/3
 		     ,n_rollouts/4
 		     ,sequence_simulation/3
@@ -120,6 +121,130 @@ n_rounds_report(N, S, Ps):-
 	,forall(member(Ri, Rs)
 	       ,writeln(Ri)
 	       ).
+
+
+
+%!	scenario_simulation(+Sequence,+Scenario,+Attacker,+Target,-Results)
+%!	is det.
+%
+%	Simulate a combat Sequence according to a Scenario.
+%
+%	@tbd Document.
+%
+%	@bug This will treat units as model sets but not for the purpose
+%	of movement. That will take a bit more work. I think.
+%
+scenario_simulation(S, Sc, As, Ds, Rs):-
+	models_unit(As, attacker, _-Us1)
+	,model_sets(Us1, Ms)
+	,models_unit(Ds, target, _-Ds_)
+	,Sc = [turns(N)
+	      ,starting_distance(D)
+	      ,attacker_movement(Ta,_)
+	      ,target_movement(Tt,_)
+	      ,target_cover(C,_)
+	      ]
+	,target_cover(C, V)
+	,scenario_simulation(0, N, S, Sc,[Ms,Ds_,[D,Ta,Tt,V]], Rs).
+
+
+%!	scenario_simulation(+I,+N,+S,+Sc,+Params,-Survivors) is det.
+%
+%	Business end of scenario_simulation/5.
+%
+%	@tbd Too many rounds of shooting make this fail. Find out why
+%	and fix.
+%
+%	@tbd Remove the printouts.
+%
+scenario_simulation(I, _, shooting, _, [_As,Ss,[D,_Ma,_Mt,_Cv]], Ss):-
+	% Shooting ends when taget is less than 1" away.
+	D =< 1
+	,format('Sim ends after ~w turns with attacker ~w" from target~n', [I,D])
+	,!.
+scenario_simulation(N, N, _, _, [_As,Ss,[D,_Ma,_Mt,_Cv]], Ss):-
+	format('Sim ends after ~w turns with attacker ~w" from target~n', [N, D])
+	,!.
+scenario_simulation(I, N, S, Sc, [As,Ds,[D,Ma,Mt,Cv]], Bind):-
+	succ(I, I_)
+	,sequence_simulation(S, [As, Ds, [D,Ma,Cv]], Ss)
+	,scenario_step(Sc, As, Ds, [D,Ma,Mt,Cv], [D_,Ma_,Mt_,Cv_])
+	,scenario_simulation(I_, N, S, Sc, [As, Ss, [D_,Ma_,Mt_,Cv_]], Bind).
+
+
+%!	scenario_step(+Scenario,+Attacker,+Target,+Params,-Modified) is
+%!	det.
+%
+%	Progress a scenario by one step.
+%
+%	Scenario is a list of parameters describing the status and
+%	actions of a unit during combat. It consists of the following
+%	compound terms:
+%	* turns(N)
+%	* starting_distance(D)
+%	* attacker_movement(Am, Ao)
+%	* target_movement(Tm, To)
+%	* target_cover(Ct, V)
+%
+%	turns/1 is the number of turns to run the simulation for. This
+%	is not modified in this predicate.
+%
+%	starting_distance/1 is the distance between attacker and target
+%	at the start of the simulation.
+%
+%	attacker_movement/2 lists the type and orientation of the
+%	attackers movement in every round of the simulation. The first
+%	argument is the type of movement, one of: [none, standard,
+%	advance, fall_back]. Orientation is a number in [-1, +1], for a
+%	move towards or away from the enemy, respectively.
+%
+%	target_movement/2 is the same as attacker_movement/2 but
+%	pertains to the target unit, rather than the attacker.
+%
+%	target_cover/2 lists the target's cover. Ct is either a boolean
+%	in [true,false], or a number given as a positive target number
+%	(30+, 15+ etc). V is the cover bonus the target may enjoy this
+%	round. If Ct is true, V is 1; if Ct is false, V is 0; otherwise,
+%	if Ct is a number, V is the result of a roll of 1d100 against a
+%	target number of Ct.
+%
+%
+scenario_step(Ss, As, Ds, [D,_Ma,_Mt,_Cv], [D_,Ta,Tt,V_]):-
+	Ss = [turns(_)
+	     ,starting_distance(_)
+	      % Attacker movement type and orientation
+	      % Orientation in [+1,-1] where -1 is move towards enemy
+	     ,attacker_movement(Ta,Oa)
+	      % Defender movement type and orientation
+	      % Again, -1 is move towards enemy, +1 away from.
+	     ,target_movement(Tt,Ot)
+	      % C is true/false or X+ target number where X in [1,100].
+	      % V is the resulting value
+	     ,target_cover(C,_V)
+	     ]
+	% This will treat all model sets as one unit again.
+	% Will need to change that.
+	,flatten(As, As_)
+	,model_set_movement_distance(As_, Ta, Da)
+	,D1 is D + Da * Oa
+	,model_set_movement_distance(Ds, Tt, Dt)
+	,D_ is D1 + Dt * Ot
+	,target_cover(C, V_).
+
+
+%!	target_cover(+Cover_term, -Value) is det.
+%
+%	Determine a target's cover bonus.
+%
+target_cover(C, V):-
+	(   number(C)
+	->  roll_vs_tn(1, 1, 100, C, V)
+	;   C == true
+	->  V = 1
+	;   C == false
+	->  V	= 0
+	).
+
 
 
 
