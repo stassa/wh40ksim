@@ -53,10 +53,14 @@ This is a WH40K simulator, still in beta and woefully incomplete. I'm supposed
 to be doing real work and people will complain if I spend all my time on this,
 so updates will have to be relatively slow.
 
+Motivation
+----------
+
 Let's take it from the start. This "simulator" aims to become a tool to help
 answer speculative tactical questions such as "what happens if I engage a
-Termagant brood in melee with my Fire Warriors?" or "How long does it take to
-shoot down an entire squad of Terminators with a unit of gun drones"? 
+Hormagaunt brood in melee with my Fire Warriors?" or, something perhaps
+something a little harder to guess like "How long does it take to shoot down an
+entire squad of Terminators with a unit of gun drones"? 
 
 As an aside, you'll notice that my examples focus heavily on the T'au Empire.
 That's because I got a T'au army and I haven't really played WH40K for a few
@@ -97,23 +101,26 @@ This is the reasoning behind this simulator: it allows you to choose a few
 models on either side and find out what happens when they shoot at each other
 -and, eventually, what happens when they start fighting or clobbering each other
 with psychic powers. For the time being, only shooting is supported (again,
-because I have a T'Au army and the T'Au don't do melee, if they can avoid it).
+because I have a T'Au army and the T'Au don't do melee, if they can avoid it and
+they don't have any psykers).
+
+Limitations of the implementation
+---------------------------------
 
 It should be noted carefully that in order for a simulator like this to be
 practicable, a number of concessions have to be made. In particular, a complete
 simulation of an entire battle is completely out of the question, or, at least,
 out of the scope, of this project. Such a complete simulation would have to
 allow for an arbitrary number of units, on an arbitrary board. The project would
-have to simulate every possible terrain detail accurately and that is something
-that is *very* hard to achieve. Even worse, each turn of combat the simulator
-would have to track the movement of *all* units on the battlefield and all the
-interactions between them. This sort of thing would get out of hand with runaway
-combinatorial explosion very, very quickly.
+have to simulate every possible terrain detail accurately and in general its
+complexity would rise to be on par with a complete WH40K video game, albeit
+without the graphics. This is not a trivial undertaking.
 
-This is not to say that such a simulator can't be created- but I'm a lonely PhD
-student working on this in my spare time and with my supervisor breathing down
-my back to finish writing that damn papers, *now*! So there's not the time or
-the resources to do the entire thing. Maybe one day.
+This is not to say that such a simulator can't be created- sure it can. But I'm
+just one poor and lonesome PhD student working on this in my spare time and with
+my supervisor breathing down my neck to finish writing that damn papers, *now*!
+So there's not the time or the resources to do the entire thing. At least, not
+right now.
 
 For the time being, I think it would still be very useful to be able to predict
 the outcome of specific tactics, even limited in scope to only two sets of
@@ -142,11 +149,15 @@ issues to keep in mind:
 
    This too shall pass, but it will take some time before I get to it.
 
-Finally- the project started with an idea about creating pretty little plots to
-show the outcome of simulations graphically, because that is always nice to
-have. This is another thing I haven't gotten around to yet. For now, you can
-look at the glorious textual output of simulations in the Swi-Prolog console. It
-might hurt your eyes a bit but at least you can see that something is going on.
+The project started with an idea about creating pretty little plots to show the
+outcome of simulations graphically, because that is always nice to have. This is
+another thing I haven't gotten around to yet. For now, you can look at the
+glorious textual output of simulations in the Swi-Prolog console. It might hurt
+your eyes a bit but at least you can see that something is going on.
+
+Finally, the Swi-Prolog console is all you have to setup the simulations you
+want. It's not a big deal to make it possible to compile army lists and draw up
+combat scenarios from a file, but ... well, I haven't gotten round to it yet.
 
 A bit of help to setup and use the project follows, below.
 
@@ -172,7 +183,8 @@ git clone https://github.com/stassa/wh40ksim.git
 ```
 
 This will create a new directory called wh40ksim in the location where you run
-the command from. You probably know all this already.
+the command from. You're reading this on github, so you probably know all about
+cloning repositories already.
 
 Prolog is an interpreted language so you don't have to worry about building the
 project, or anything like that. Once you have the sources, if you're on a
@@ -203,7 +215,7 @@ if you're on a graphical X server, it will bring up the IDE. If you're in text
 mode, it will fail and you're on your own after that. Then again, if you're in
 text mode you don't need me to hold your hand here.
 
-Units and model sets 
+Units and model-sets 
 ---------------------
 
 The simulator makes use of a concept of "model-sets", which is not something
@@ -211,7 +223,7 @@ you're likely to have found in any official Games Workshop™ documentation.
 Indeed, it's just a term I pulled out of my backside (the same place the sun
 shines form every morning). On the other hand, it's very convenient.
 
-A model set S is defined as a subset of the models in a unit U where all the sᵢ
+A model-set S is defined as a subset of the models in a unit U where all the sᵢ
 ∈ S have the same profile p _and wargear W_: 
 ```
 S : { s ∈ U | profile(s) = p, p ∈ P ∧ wargear(s) = W, W ⊆ Wg }
@@ -219,6 +231,10 @@ S : { s ∈ U | profile(s) = p, p ∈ P ∧ wargear(s) = W, W ⊆ Wg }
 
 Where P the set of profiles, Wg the set of wargear items equipped by models in
 U.
+
+The perceptive user will notice that the model-set definition above defines a
+partitioning relation for sets of models. Just thought you might be interested
+to know that we're doing proper science, here. I know, right?
 
 Using this definition, sub-sets of models in a unit with diverse models can be
 treated as one for the purposes of a simulation. 
@@ -237,7 +253,7 @@ we can safely treat each of those "model-sets" as one for the purposes of
 combat.
 
 This indeed is pretty much the same thing as the usual "fast die rolling"
-techniques described in most 40K rulebooks.
+techniques described in most Warhammer™ rulebooks.
 
 With this in mind, this is how to assemble a unit in the simulator and
 partition it into model-sets: 
@@ -266,6 +282,10 @@ model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
 true.
 ```
 
+If you entered the entire text, with the "?-" at the start you will probably see
+an error message. In the future, when you see an example query with output like
+the one above, omit the "?-" when entering it in the Swi-Prolog console.
+
 The first predicate, models\_unit/3 takes as arguments a list of models and
 their numbers (in the form Model-Numer, separated by a hyphen) and a name for
 the unit and expands this list to a list including the specified number of
@@ -275,7 +295,10 @@ term model/11, that holds the model's profile information and wargear options.
 As discussed earlier, the functionality for assembling a unit is still
 rudimentary and you can't select specific wargear items- you only get what ever
 happens to be listed first in the datasheets.pl file entry for the unit type (as
-unit\_profiles/11).
+clauses of the predicate unit\_profiles/11. For those who don't know Prolog but
+know SQL, this is basically the same as saying there's a table called
+"unit\_profiles" with 11 columns and row for each unit profile known to the
+system).
 
 The next predicate call, model\_sets/2 takes as argument a unit, created from
 models\_unit/3 and partitions it to model-sets, of all models with the same
@@ -285,12 +308,12 @@ Rollouts and simulations
 ------------------------
 
 This project uses the term "rollout" to mean a "static" simulation of a single
-combat sequence (shooting, fighting, etc, though only shooting for the time
-being). A rollout is "static" in the sense that the any parameters such as distance
-of the attacker to its target, the attacker's movement etc, are given from the
-start and do not change throughout the rollout. Namely, casualties are not
-removed from the target unit and the number of models in it are not removed
-(although casualties are reported).
+combat sequence (shooting, fighting, etc, though only shooting is implemented
+for the time being). A rollout is "static" in the sense that any parameters such
+as distance of the attacker to its target, the attacker's movement etc, are
+given from the start and do not change throughout the rollout. Namely,
+casualties are not removed from the target unit (although casualties are
+reported).
 
 Rollouts are meant to be used to inform of the probability to inflict casualties
 when attacking one unit with another. For best results, multiple rollouts of the
@@ -316,9 +339,10 @@ rollouts will calculate the results of the attacking unit shooting while 18"
 from their target. 
 
 The second argument, "none" is a description of the movement of the attacker in
-the last movement phase: none means the unit remained stationary. Other movement
-types recognised by the simulator are:
+the last movement phase: in this case, it means the unit remained stationary.
+The full list of movement types recognised by the simulator are:
 
+* none
 * standard
 * advance
 
@@ -363,23 +387,25 @@ tracks casualties inflicted to the target every turn.
 Here is an example of running a simulation, complete with a simple scenario:
 
 ```
-?- _N= 6, _Sc = [turns(_N), starting_distance(36),attacker_movement(none,+1),target_movement(advance,-1),target_cover(false,_)], _U1 = [mv1_gun_drone-12],  _U2 = [space_marine_sergeant-1, space_marine-9], scenario_simulation(shooting, _Sc, _U1, _U2, _Rs), forall(member(Ri,_Rs),writeln(Ri)), length(_Rs, Survivors).
-Sim ends after 4 turns with attacker 1" from target
+ _Sc = [turns(6), starting_distance(36),attacker_movement(none,0),target_movement(advance,-1),target_cover(false,_)], _U1 = [mv1_gun_drone-12],  _U2 = [space_marine_sergeant-1, space_marine-9], scenario_simulation(shooting, _Sc, _U1, _U2, _Rs), forall(member(Ri,_Rs),writeln(Ri)), length(_Rs, Survivors).
+Sim ends after 4 turns with attacker -3" from target
 model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
-Survivors = 1.
+model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
+model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
+Survivors = 3.
 ```
 
-The list Sc = [turns(\_N), starting\_distance(36), attacker\_movement(none,+1),
+The list Sc = [turns(\_6), starting\_distance(36), attacker\_movement(none,+1),
 target\_movement(advance,-1), target\_cover(false,\_)] defines a "scenario", a
 set of parameters that the simulation will update dynamically, as it goes on.
 
 A scenario list must be in a specific order and must contain the same paremeter
 terms, although their values may vary. The order and terms are as follows:
 
-1. turns(\_N)
+1. **turns(N)**  
    The number of turns to simulate. N should be an integer, greater than 0.
 
-2. starting\_distance(D)
+2. **starting_distance(D)**  
    The distance of the attacker to the target at the start of the simulation. D
    should be an integer, greater than 0.
 
@@ -387,7 +413,7 @@ terms, although their values may vary. The order and terms are as follows:
    will be updated from the starting distance according to the target and
    attacker's movements.
 
-3. attacker\_movement(T,O)
+3. **attacker_movement(T,O)**  
    The type, T and orientation, O, of the attacker's movement.
 
    T can be one of: {none, standard, advance, fall\_back}. Note that the dynamic
@@ -404,7 +430,11 @@ terms, although their values may vary. The order and terms are as follows:
    negative integer- but that will just give you silly results. Another bug for
    the squishing.
 
-4. target\_movement(T, O) 
+   Note that if movement type is "T" it doesn't matter what you enter as the
+   orientation- the unit will always move exactly 0". To avoid errors however,
+   make sure there is a number there (so don't enter an underscore).
+
+4. **target_movement(T, O)**  
    The type, T and orientation, O, of the target's movement.
 
    These are the same as for the attacker's movement. Specifically, the meaning
@@ -412,7 +442,7 @@ terms, although their values may vary. The order and terms are as follows:
    unit is moving _towards_ its adversary, whereas a "+1" that it is moving away
    from it.
 
-5. target\_cover(C,V)
+5. **target_cover(C,V)**  
    Whether the target unit is benefiting from cover and the resulting cover
    bonus it receives to its Save rolls.
 
@@ -433,36 +463,33 @@ terms, although their values may vary. The order and terms are as follows:
 
    For instance, specifying "target\_cover(30, \_)" means that the target will
    have a 30% chance to find cover in each turn of the simulation. Each turn,
-   the simulator will roll a 100-sided die and if this rolls under, or equal to
+   the simulator will roll a 100-sided die and if this rolls under, or equal to,
    30, it will grant a bonus of 1 to the target, otherwise 0.
 
 As everything else in the project, the dynamic simulation itself is still not
 very flexible and it's only possible to define very simple scenarios. For
 instance, it doesn't allow units to react dynamically to their opponents'
-behaviour (for example, to fall seek cover when taking too havey casualties
-etc). The target can't shoot back, just advance and take it like a man. And so
-on.
-
-Hopefully, I'll have the motivation to add more functionality at some point.
+behaviour (for example, to seek cover when taking too heavy casualties etc). The
+target can't shoot back, just advance and take it like a man. And so on.
 
 Creating permanent army lists and defining combat simulation files
 ------------------------------------------------------------------
 
-In short, this is not yet an option. You can only enter queries at the
+In short, this too is not yet an option. You can only enter queries at the
 Swi-Prolog console. This is just a matter of me finding the time to add that to
 the project.
 
 In the meantime, here's some more things you can do at the Swi Console.
 
 
-Calculate number of attacks for each model set in a unit:
+**Calculate number of attacks for each model-set in a unit:**
 
 ```
 ?- models_unit([mv1_gun_drone-12], 'Tactical Drones 1', _N-_Us), model_sets(_Us, _Ss), member(_Si, _Ss), model_set_attacks(_Si, _M, _Wn, _Pa, _Wa), number_of_attacks(_M, _Pa, _Wa, _Wn, Attacks).
 Attacks = 48.
 ```
 
-Roll to hit for each modelset in a unit:
+**Roll to hit for each model-set in a unit:**
 ```
 ?- models_unit([fire_warrior-7, fire_warrior_shasui-1, mv1_gun_drone-2, mv36_guardian_drone-1], 'Tactical Squad 1', _N-_Us), model_sets(_Us, _Ss), forall( nth1(I, _Ss, Si), ( model_set_attacks(Si, _M, _Wn, _Pa, _Wa), number_of_attacks(_M, _Pa, _Wa, _Wn, _A), hit_roll(_A, (5+), 0, Hn), format('Model-set ~w:~n', [I]), forall(member(Mi,Si),writeln(Mi)), format('hits ~w times in ~w attacks.~n', [_A,Hn]) ) ).
 Model-set 1:
@@ -485,13 +512,13 @@ hits 8 times in 2 attacks.
 true.
 ```
 
-Roll to wound models in a target unit:
+**Roll to wound models in a target unit:**
 ```
 ?- models_unit([mv1_gun_drone-12, mv36_guardian_drone-1], 'Tactical Squad 1', _N-_Us), wound_roll(8, 4, 4, Wounds).
 Wounds = 2.
 ```
 
-Allocate wounds to models in a unit:
+**Allocate wounds to models in a unit:**
 ```
 ?- models_unit([mv1_gun_drone-12, mv36_guardian_drone-1], 'Drone Squad 1', _N-_Us), allocate_wounds(10, _Us, _Ms), forall(member(Mi-Ws, _Ms), (model_value(Mi,'W',Wi), model_value(Mi,name,Nm), format('Allocated ~w wounds to ~w with ~w wounds remaining~n', [Ws, Nm, Wi]))), configuration:wound_allocation_strategy(_WAS), format('Wounds allocated by strategy ~w~n', [_WAS]).
 Allocated 0 wounds to mv1_gun_drone with 1 wounds remaining
@@ -511,19 +538,20 @@ Wounds allocated by strategy fewer_wounds_first
 true.
 ```
 
-Yes, in theory you can configure what "wound allocation strategy you want to
+Yes, in theory you can configure what "wound allocation strategy" you want to
 employ. Sure, in theory you can even define your own (although you'll need to
 learn Prolog to do so).
 
 No, in practice, there is only one wound allocation strategy currently possible:
-models with the fewer wounds left are first in line for wounds to be allocated
-to their unit. This is a bit meh, but we're still in beta, ja?
+those models with the fewer wounds left are first in line for wounds to be
+allocated to their unit. This is a bit meh, but like I keep saying, we're still
+in beta, ja?
 
-Roll to save for each model in a set of models in a unit to which wounds have
-been allocated taking into account attacker's AP and defender's cover bonus and
+**Roll to save for each model in a set of models** to which wounds have been
+allocated taking into account attacker's AP and defender's cover bonus and
 report remaining unsaved wounds:
 ```
-[debug]  ?- models_unit([mv1_gun_drone-12, mv36_guardian_drone-1], 'Tactical Squad 1', _N-_Us), allocate_wounds(10, _Us, _Ms), saving_throws(_Ms, -2, 1, _Fs), forall(member(Fi-Sv,_Fs), (model_value(Fi,name,Nm), format('~w failed ~w saves~n',[Nm,Sv]))).
+?- models_unit([mv1_gun_drone-12, mv36_guardian_drone-1], 'Tactical Squad 1', _N-_Us), allocate_wounds(10, _Us, _Ms), saving_throws(_Ms, -2, 1, _Fs), forall(member(Fi-Sv,_Fs), (model_value(Fi,name,Nm), format('~w failed ~w saves~n',[Nm,Sv]))).
 mv1_gun_drone failed 0 saves
 mv1_gun_drone failed 0 saves
 mv36_guardian_drone failed 0 saves
@@ -540,9 +568,9 @@ mv1_gun_drone failed 1 saves
 true.
 ```
 
-Inflict damage and modify models' wounds accordingly:
+**Inflict damage and modify models' wounds accordingly**:
 ```
-[debug]  ?- models_unit([mv1_gun_drone-10], 'Tactical Drones 1', _N-_Us), allocate_wounds(10, _Us, _Ms), saving_throws(_Ms, -1, 0, _Fs), inflict_damage(_Fs, 3, _Rs), forall(member(Ri, _Rs), (model_value(Ri, 'W', Ws), model_value(Ri,name,Nm), format('Model ~w has ~w wounds remaining~n', [Nm,Ws])) ).
+?- models_unit([mv1_gun_drone-10], 'Tactical Drones 1', _N-_Us), allocate_wounds(10, _Us, _Ms), saving_throws(_Ms, -1, 0, _Fs), inflict_damage(_Fs, 3, _Rs), forall(member(Ri, _Rs), (model_value(Ri, 'W', Ws), model_value(Ri,name,Nm), format('Model ~w has ~w wounds remaining~n', [Nm,Ws])) ).
 Model mv1_gun_drone has -2 wounds remaining
 Model mv1_gun_drone has 1 wounds remaining
 Model mv1_gun_drone has -2 wounds remaining
@@ -556,8 +584,8 @@ Model mv1_gun_drone has 1 wounds remaining
 true.
 ```
 
-Simulate one round of shooting, start to end, reporting survivors in the target
-unit:
+**Simulate one round of shooting, start to end, reporting survivors in the
+target unit:**
 ```
 _Parameters = [15, standard, 0], models_unit([fire_warrior-11, fire_warrior_shasui-1], 'Strike Team 1', _N-_Us), model_sets(_Us, _Ms), models_unit([space_marine_sergeant-1, space_marine-4], 'Tactical Squad 1', _N2-_Us2), shooting_sequence(_Ms, _Us2, _Parameters, _Ss), forall(member(Si, _Ss), writeln(Si)), length(_Ss, Survivors).
 model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
@@ -575,9 +603,8 @@ cover.
 Thought for the day: Good things come to those who wait.
 --------------------------------------------------------
 
-In this case, if you wait long enough I'll probably end up fleshing out this
-silly little project with more bells and whistles, until you can actually make
-use of it.
+If you wait long enough I'll probably end up fleshing out this silly little
+project with more bells and whistles, until you can actually make use of it.
 
 But heed my warning: a simulation is just a simulation. At best, you can hope to
 learn what are the probabilities of different outcomes to your actions. How a
