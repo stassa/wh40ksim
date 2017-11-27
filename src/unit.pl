@@ -252,26 +252,6 @@ model_set_attacks([M1|Ms], Wg, D, M, Mn, Pa, Wa, P):-
 	 ).
 
 
-model_set_attacks_([M1|Ms], D, M, Mn, Wn, Pa, Wa, P):-
-	length([M1|Ms], Mn)
-	,model_value(M1, 'A', Pa)
-	,model_value(M1, wargear, Wg-Wn)
-	,weapon_value(Wg, 'Type', Type)
-	,weapon_value(Wg, 'Range', R)
-	,Type =.. [T,N]
-	,(   D =< R
-	     % Units can't shoot at enemies less than 1" away.
-	     % except with pistols.
-	    ,D >= 1
-	 ->  weapon_attacks(T, N, D, R, M, Wa, P)
-	 ;   D =< R
-	    ,weapon = pistol
-	 ->  weapon_attacks(T, N, D, R, M, Wa, P)
-	 ;   Wa = 0
-	    ,P = 0
-	 ).
-
-
 
 %!	weapon_attacks(+Type, -Attacks) is det.
 %

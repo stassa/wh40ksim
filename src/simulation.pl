@@ -218,14 +218,8 @@ scenario_simulation(I, N, S, Sc, [As,Ds,[D,Ma,Mt,Cv]], Bind):-
 scenario_step(Ss, As, Ds, [D,_Ma,_Mt,_Cv], [D_,Ta,Tt,V_]):-
 	Ss = [turns(_)
 	     ,starting_distance(_)
-	      % Attacker movement type and orientation
-	      % Orientation in [+1,-1] where -1 is move towards enemy
 	     ,attacker_movement(Ta,Oa)
-	      % Defender movement type and orientation
-	      % Again, -1 is move towards enemy, +1 away from.
 	     ,target_movement(Tt,Ot)
-	      % C is true/false or X+ target number where X in [1,100].
-	      % V is the resulting value
 	     ,target_cover(C,_V)
 	     ]
 	% This will treat all model sets as one unit again.
@@ -259,7 +253,6 @@ target_cover(C, V):-
 	;   C == false
 	->  V	= 0
 	).
-
 
 
 
@@ -517,29 +510,6 @@ weapon_sequence_(Mi, BS, [Wg-Wn|Gs], Ts, T, [Ds, Mv, Cv], Bind):-
 	,inflict_damage(Fs, D, Rs)
 	,remove_casualties(Rs, Ss)
 	,weapon_sequence_(Mi, BS, Gs, Ss, T, [Ds, Mv, Cv], Bind).
-
-
-/*
-shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv, Cv]):-
-	Mi = [M1|_]
-	,model_value(M1, 'BS', BS)
-	,model_value(M1, 'wargear', Wg-_Num)
-	,weapon_value(Wg, 'S', S)
-	,weapon_value(Wg, 'AP', AP)
-	,weapon_value(Wg, 'D', D)
-	,Ts = [T1|_]
-	,model_value(T1, 'T', T)
-	,model_set_attacks(Mi, Ds, Mv, Mn, Wn, Pa, Wa, P)
-	,number_of_attacks(Mn, Pa, Wa, Wn, As)
-	,hit_roll(As, BS, P, Hn)
-	,wound_roll(Hn, S, T, Ws)
-	,allocate_wounds(Ws, Ts, Ms_Ws)
-	,saving_throws(Ms_Ws, AP, Cv, Fs)
-	,inflict_damage(Fs, D, Rs)
-	,remove_casualties(Rs, Ss)
-	,shooting_sequence_(Ms, Ss, Bind, [Ds, Mv, Cv]).
-	*/
-
 
 
 
