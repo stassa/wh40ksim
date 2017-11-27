@@ -19,7 +19,7 @@ Although the device is still a mere prototype (the Earth caste friend says it's
 upon a single target, while taking into account both sides' movement and even
 cover, to some degree. A full battlefield simulation is still a long way away,
 but other aspects of combat are in the works. Our engineers sensibly considered
-barbarous melee fighting not to be the primary objective. Some races primitive
+barbarous melee fighting not to be the primary objective. Some races' primitive
 superstitions regarding "psychic powers" will eventually have to be taken into
 account also- they often seem capable of turning the tide of battle, therefore,
 we must be prepared.
