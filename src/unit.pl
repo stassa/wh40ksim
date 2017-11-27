@@ -65,7 +65,7 @@ lists of models, which is also sometimes useful.
 %	information is the model's profile.
 %
 models_unit(Cs, Un, Un-Us):-
-	findall(model(Nm,M,WS,BS,S,T,W,A,Ld,Sv,Wg-Num)
+	findall(model(Nm,M,WS,BS,S,T,W,A,Ld,Sv,Wg_Nums)
 	       ,(member(Nm-N, Cs)
 		,between(1, N, _)
 		,unit_profiles(_Id,Nm,M,WS,BS,S,T,W,A,Ld,Sv)
@@ -76,7 +76,10 @@ models_unit(Cs, Un, Un-Us):-
 		% the model, including each item once for its Num
 		% i.e. the number of times that item is equipped
 		% on the model.
-		,once(wargear(Nm, Wg, Num))
+		%,once(wargear(Nm, Wg, Num))
+		,findall(Wg-Num
+			,wargear(Nm,Wg,Num)
+			,Wg_Nums)
 		)
 	       ,Us).
 
@@ -230,7 +233,26 @@ model_set_attacks([M1|Ms], Mn, Wn, Pa, Wa):-
 %	@bug This should also take into account Overwatch rules. When a
 %	unit is charged, it gets an attack, no?
 %
-model_set_attacks([M1|Ms], D, M, Mn, Wn, Pa, Wa, P):-
+model_set_attacks([M1|Ms], Wg, D, M, Mn, Pa, Wa, P):-
+	length([M1|Ms], Mn)
+	,model_value(M1, 'A', Pa)
+	,weapon_value(Wg, 'Type', Type)
+	,weapon_value(Wg, 'Range', R)
+	,Type =.. [T,N]
+	,(   D =< R
+	     % Units can't shoot at enemies less than 1" away.
+	     % except with pistols.
+	    ,D >= 1
+	 ->  weapon_attacks(T, N, D, R, M, Wa, P)
+	 ;   D =< R
+	    ,weapon = pistol
+	 ->  weapon_attacks(T, N, D, R, M, Wa, P)
+	 ;   Wa = 0
+	    ,P = 0
+	 ).
+
+
+model_set_attacks_([M1|Ms], D, M, Mn, Wn, Pa, Wa, P):-
 	length([M1|Ms], Mn)
 	,model_value(M1, 'A', Pa)
 	,model_value(M1, wargear, Wg-Wn)
@@ -287,8 +309,8 @@ weapon_attacks(T, A):-
 %
 weapon_attacks(assault, N, _D, _R, M, A, P):-
 	!
-	,(   memberchk(M,[none, standard])
-	->  type_attacks(N, A)
+	,(  memberchk(M,[none, standard])
+	->  A = N
 	   ,P = 0
 	;   M = advance
 	->  type_attacks(N, A)
@@ -300,7 +322,7 @@ weapon_attacks(assault, N, _D, _R, M, A, P):-
 weapon_attacks(heavy, N, _D, _R, M, A, P):-
 	!
 	,(   M = standard
-	 ->  type_attacks(N, A)
+	 ->  A = N
 	    ,P = -1
 	;    M = none
 	 ->  type_attacks(N, A)
@@ -314,10 +336,9 @@ weapon_attacks(rapid_fire, N, D, R, M, A, P):-
 	,R_ is round(R / 2)
 	,(   memberchk(M, [none,standard])
 	    ,D =< R_
-	 ->  type_attacks(N, A_)
-	    ,A is A_ * 2
+	 ->  attack_multiplier(N, 2, A)
 	 ;   memberchk(M, [none,standard])
-	 ->  type_attacks(N, A)
+	 ->  A = N
 	 ;   A = 0
 	 )
 	,P = 0.
@@ -327,7 +348,7 @@ weapon_attacks(grenade, N, _, _, M, A, P):-
 	,(   M = advance
 	 ->  A = 0
 	    ,P = 0
-	 ;   type_attacks(N, A)
+	 ;   A = N
 	    ,P = 0
 	 ).
 
@@ -336,9 +357,27 @@ weapon_attacks(pistol, N, _, _, M, A, P):-
 	,(   M = advance
 	 ->  A = 0
 	    ,P = 0
-	 ;   type_attacks(N, A)
+	 ;   A = N
 	    ,P = 0
 	 ).
+
+
+%!	attack_multiplier(+Attack,+Multiplier,-Result) is det.
+%
+%	Multiply an attack by a Multiplier.
+%
+%	Attack may be a number or a compound NdM die size term. If
+%	Attack is a number, Result is its product to Multiplier. If
+%	Attack is a die size,
+%
+attack_multiplier(N, M, P):-
+	number(N)
+	,!
+	,P is N * M.
+attack_multiplier(NdM, K, KNdM):-
+	die_size(NdM, N, _M)
+	,KN is N * K
+	,die_size(KNdM, KN, 6).
 
 
 %!	type_attacks(+Number, -Attacks) is det.

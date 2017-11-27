@@ -166,6 +166,11 @@ scenario_simulation(I, _, S, _, [As,Ds,[1,Ma,_Mt,Cv]], Ss):-
 	sequence_simulation(S, [As, Ds, [1,Ma,Cv]], Ss)
 	,format('Sim ends after ~w turns with attacker ~w" from target~n',[I,1])
 	,!.
+scenario_simulation(I,_,_,_,[_,[],[_D,_Ma,_Mt,_Cv]], []):-
+	% Shooting also ends when there's nothing left to shoot.
+	format('Sim ends after ~w turns with 0 targets remaining~n',[I])
+	,writeln('Resistance eliminated.')
+	,!.
 scenario_simulation(I, N, S, Sc, [As,Ds,[D,Ma,Mt,Cv]], Bind):-
 	succ(I, I_)
 	,scenario_step(Sc, As, Ds, [D,Ma,Mt,Cv], [D_,Ma_,Mt_,Cv_])
@@ -468,6 +473,56 @@ shooting_sequence_([], Ss, Ss, _):-
 shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv, Cv]):-
 	Mi = [M1|_]
 	,model_value(M1, 'BS', BS)
+	,model_value(M1, 'wargear', Ws)
+	,Ts = [T1|_]
+	,model_value(T1, 'T', T)
+	,weapon_sequence(Mi,BS,Ws,Ts,T,[Ds, Mv, Cv],Ss)
+	,shooting_sequence_(Ms, Ss, Bind, [Ds, Mv, Cv]).
+
+
+%!	weapon_sequence(+Models,+BS,+Wargear,+Targets,+T,-Survivors) is
+%!	det.
+%
+%	Resolve attacks with each weapon equipped by Models in a set.
+%
+%	BS is the BS of the attackers; T the target unit's Toughness.
+%
+%	Wargear is a list of key-value pairs W-N, where each W is a
+%	wargear item and N the numbers of that item equipped on models
+%	in the input model-set, Models.
+%
+weapon_sequence(M, BS, Wg, Ts, T, Params, Ss):-
+	weapon_sequence_(M, BS, Wg, Ts, T, Params, Ss).
+
+
+%!	weapon_sequence_(+Models,+BS,+Wargear,+Targets,+T,+Acc,-Survivors)
+%!	is det.
+%
+%	Business end of weapon_sequence/6.
+%
+weapon_sequence_(_, _, _, [], _, _, []):-
+	!.
+weapon_sequence_(_Mi, _BS, [], Ss, _T, _, Ss):-
+	!.
+weapon_sequence_(Mi, BS, [Wg-Wn|Gs], Ts, T, [Ds, Mv, Cv], Bind):-
+	weapon_value(Wg, 'S', S)
+	,weapon_value(Wg, 'AP', AP)
+	,weapon_value(Wg, 'D', D)
+	,model_set_attacks(Mi, Wg, Ds, Mv, Mn, Pa, Wa, P)
+	,number_of_attacks(Mn, Pa, Wa, Wn, As)
+	,hit_roll(As, BS, P, Hn)
+	,wound_roll(Hn, S, T, Ws)
+	,allocate_wounds(Ws, Ts, Ms_Ws)
+	,saving_throws(Ms_Ws, AP, Cv, Fs)
+	,inflict_damage(Fs, D, Rs)
+	,remove_casualties(Rs, Ss)
+	,weapon_sequence_(Mi, BS, Gs, Ss, T, [Ds, Mv, Cv], Bind).
+
+
+/*
+shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv, Cv]):-
+	Mi = [M1|_]
+	,model_value(M1, 'BS', BS)
 	,model_value(M1, 'wargear', Wg-_Num)
 	,weapon_value(Wg, 'S', S)
 	,weapon_value(Wg, 'AP', AP)
@@ -483,6 +538,7 @@ shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv, Cv]):-
 	,inflict_damage(Fs, D, Rs)
 	,remove_casualties(Rs, Ss)
 	,shooting_sequence_(Ms, Ss, Bind, [Ds, Mv, Cv]).
+	*/
 
 
 
@@ -516,7 +572,11 @@ shooting_sequence_([Mi|Ms], Ts, Bind, [Ds, Mv, Cv]):-
 %	best thing to do). In any case, keep this in mind.
 %
 number_of_attacks(M, Pa, Wa, Wn, N):-
-	N is M * Pa * Wa * Wn.
+	(   number(Wa)
+	->  Wa_ = Wa
+	;   roll(Wa,Wa_)
+	)
+	,N is M * Pa * Wa_ * Wn.
 
 
 
@@ -560,6 +620,8 @@ hit_roll(A, BS, Ms, Hn):-
 %	determination.
 %
 wound_roll(0, _, _, 0):-
+	!.
+wound_roll(_, nil, _, 0):-
 	!.
 wound_roll(Hn, S, T, Wn):-
 	to_wound(S, T, Tn)
@@ -683,12 +745,16 @@ allocate_wounds([Mi|Ms], Hn, Acc, Bind):-
 %	0 (meaning the model made all its saving throws).
 %
 saving_throws(Ms, AP, Cv, Fs):-
-	findall(Mi-F
+	(   AP = nil
+	->  AP_ = 0
+	;   AP_ = AP
+	)
+	,findall(Mi-F
 	       ,(member(Mi-Ws, Ms)
 		,(   Ws > 0
 		->   once(model_value(Mi,'Sv', Sv))
 		     % R is no. of successful saves
-		    , Mod is Cv + AP
+		    , Mod is Cv + AP_
 		    ,roll_vs_tn_mod(Ws, '1d6', Sv, Mod, R)
 		 ;   R = 0
 		 )
@@ -725,10 +791,18 @@ saving_throws(Ms, AP, Cv, Fs):-
 %	of key-value pairs in the output.
 %
 inflict_damage(Ms, D, Rs):-
-	findall(Mi
+	% If D is not a number, it should be
+	% an NdM die size term
+	(   number(D)
+	->  D_ = D
+	;   D = nil
+	->  D_ = 0
+	;   roll(D, D_)
+	)
+	,findall(Mi
 	       ,(member(Mi-Fi, Ms)
 		,model_value(Mi, 'W', W)
-		,W_ is W - (Fi * D)
+		,W_ is W - (Fi * D_)
 		,model_value(Mi, 'W', W_)
 		)
 	       ,Rs).

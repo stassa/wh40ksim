@@ -13,6 +13,10 @@
 %
 %	Parse, or generate a die size in KdM Notation.
 %
+die_size(NdM, N, M):-
+	var(NdM)
+	,!
+	,atomic_list_concat([N,M],d,NdM).
 die_size(NDM, N, M):-
 	atomic_list_concat([N_,M_],d,NDM)
 	,(   N_ = ''
