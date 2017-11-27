@@ -136,16 +136,16 @@ issues to keep in mind:
    and I only needed data for a few units to do that.
    
    You can add data on more units in the datasheets module, but to do that you
-   would have to understand the language used in the simulator, Prolog. This is
-   notoriously hard to do, even for experienced soft. engineers. At some point I
-   will make this process more available, even to the non-technical. But I
-   haven't gotten around to that yet.
+   would have to understand the language used to write the simulator, Prolog.
+   This is notoriously hard to do, even for experienced soft. engineers. At some
+   point I will make this process more available, even to the non-technical. But
+   I haven't gotten around to that yet.
 
 2. There is still very little functionality to help create a unit, with wargear
    etc selections and all. All you can do for the time being is select the types
-   and numbers of models you want to go into a unit- and you won't even get a
-   selection of weapons, they just get what happens to be the first weapon in
-   the unit's listing in the datasheets module.
+   and numbers of models you want to go into a unit. You can't even select
+   optional wargear- only what is "default" (i.e. not listed as a wargear option
+   in the unit's datasheet).
 
    This too shall pass, but it will take some time before I get to it.
 
@@ -234,7 +234,7 @@ U.
 
 The perceptive user will notice that the model-set definition above defines a
 partitioning relation for sets of models. Just thought you might be interested
-to know that we're doing proper science, here. I know, right?
+to know that we're doing proper _science_, here. I know, right?
 
 Using this definition, sub-sets of models in a unit with diverse models can be
 treated as one for the purposes of a simulation. 
@@ -267,18 +267,18 @@ Entering the above query in the Swi Console will result in the following output:
 ```
 ?- models_unit([fire_warrior_shasui-1, fire_warrior-7, mv1_gun_drone-1, mv36_guardian_drone-1], 'Strike Team 1', _N-_Us), model_sets(_Us, _Ss), forall(nth1(I,_Ss,Si),(format('Model-set ~w:~n', [I]),forall(member(Sk,Si),writeln(Sk)))).
 Model-set 1:
-model(mv36_guardian_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,guardian_field-1)
+model(mv36_guardian_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,[guardian_field-1])
 Model-set 2:
-model(mv1_gun_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,pulse_carbine-2)
+model(mv1_gun_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,[pulse_carbine-2])
 Model-set 3:
-model(fire_warrior_shasui,6,+ 5,+ 4,3,3,1,1,7,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
+model(fire_warrior_shasui,6,+ 5,+ 4,3,3,1,1,7,+ 4,[pulse_rifle-1,photon_grenade-1])
+model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
 true.
 ```
 
@@ -293,12 +293,12 @@ models the specified number of times. In this unit-list, each model is a Prolog
 term model/11, that holds the model's profile information and wargear options.
 
 As discussed earlier, the functionality for assembling a unit is still
-rudimentary and you can't select specific wargear items- you only get what ever
-happens to be listed first in the datasheets.pl file entry for the unit type (as
-clauses of the predicate unit\_profiles/11. For those who don't know Prolog but
-know SQL, this is basically the same as saying there's a table called
-"unit\_profiles" with 11 columns and row for each unit profile known to the
-system).
+rudimentary and you can't select alternative wargear items- you only get what
+ever happens to be listed as "default" wargear (i.e. not wargear options) in the
+datasheets.pl file entry for the unit type (as clauses of the predicate
+wargear3). For those who don't know Prolog but know SQL, this is basically the
+same as saying there's a table called "wargear" with 3 columns and a row for
+each unit profile known to the system).
 
 The next predicate call, model\_sets/2 takes as argument a unit, created from
 models\_unit/3 and partitions it to model-sets, of all models with the same
@@ -387,17 +387,23 @@ tracks casualties inflicted to the target every turn.
 Here is an example of running a simulation, complete with a simple scenario:
 
 ```
- _Sc = [turns(6), starting_distance(36),attacker_movement(none,0),target_movement(advance,-1),target_cover(false,_)], _U1 = [mv1_gun_drone-12],  _U2 = [space_marine_sergeant-1, space_marine-9], scenario_simulation(shooting, _Sc, _U1, _U2, _Rs), forall(member(Ri,_Rs),writeln(Ri)), length(_Rs, Survivors).
-Sim ends after 4 turns with attacker -3" from target
-model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
-model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
-model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
-Survivors = 3.
+_Sc = [turns(6), starting_distance(36),attacker_movement(none,0),target_movement(advance,-1),target_cover(false,_)], _U1 = [mv1_gun_drone-12],  _U2 = [space_marine_sergeant-1, space_marine-9], scenario_simulation(shooting, _Sc, _U1, _U2, _Rs), forall(member(Ri,_Rs),writeln(Ri)), length(_Rs, Survivors).
+Sim ends after 5 turns with attacker 1" from target
+model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,[boltgun-1,bolt_pistol-1,frag_grenade-1,krak_grenade-1])
+model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,[boltgun-1,bolt_pistol-1,frag_grenade-1,krak_grenade-1])
+Survivors = 2.
 ```
 
-The list Sc = [turns(\_6), starting\_distance(36), attacker\_movement(none,+1),
-target\_movement(advance,-1), target\_cover(false,\_)] defines a "scenario", a
-set of parameters that the simulation will update dynamically, as it goes on.
+The list:
+```
+Sc = [turns(6), starting\_distance(36), attacker\_movement(none,+1), target\_movement(advance,-1), target\_cover(false,\_)]
+```
+
+Defines a "scenario", a set of parameters that the simulation will update
+dynamically, as it goes on. This specific scenario tells the simulator to run
+for 6 turns. The attacker and the target will start 36" inches from each other
+and each turn the target will advance, while the attacker will not move.
+Finally, there will be no cover available to the target. 
 
 A scenario list must be in a specific order and must contain the same paremeter
 terms, although their values may vary. The order and terms are as follows:
@@ -480,45 +486,49 @@ Swi-Prolog console. This is just a matter of me finding the time to add that to
 the project.
 
 In the meantime, here's some more things you can do at the Swi Console.
+Alternatively, you can put all these in a file and consult them, like you
+consulted the load\_project file. I won't explain ahow to do this any further,
+for the time being.
 
-
-**Calculate number of attacks for each model-set in a unit:**
-
+Calculate number of attacks with each equipped weapon for each model-set in a
+unit:
 ```
-?- models_unit([mv1_gun_drone-12], 'Tactical Drones 1', _N-_Us), model_sets(_Us, _Ss), member(_Si, _Ss), model_set_attacks(_Si, _M, _Wn, _Pa, _Wa), number_of_attacks(_M, _Pa, _Wa, _Wn, Attacks).
-Attacks = 48.
+models_unit([fire_warrior-12, mv36_guardian_drone-1], 'Strike Team 1', _N-_Us), model_sets(_Us, _Ss), forall(member([_M1|_Si], _Ss), (length([_M1|_Si], L), format('Model set of ~w ~w~n',[L,_M1]), model_value(_M1, wargear, _Ws), forall(member(_Wg-_Wn,_Ws), (model_set_attacks([_M1|_Si], _Wg, 8, none, _Mn, _Pa, _Wa, _Mod) , number_of_attacks(_Mn, _Pa, _Wa, _Wn, A),format('Attacks with weapon ~w: ~w~n', [_Wg,A]))))).
+Model set of 1 model(mv36_guardian_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,[guardian_field-1])
+Attacks with weapon guardian_field: 0
+Model set of 12 model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+Attacks with weapon pulse_rifle: 24
+Attacks with weapon photon_grenade: 48
 ```
 
-**Roll to hit for each model-set in a unit:**
+Note that the Photon Grenades have D6 attacks. The actual number is calculated
+randomly by the simulator, therefore each run will give a different number of
+attacks for them.
+
+Roll to hit for each model-set in a unit:
 ```
-?- models_unit([fire_warrior-7, fire_warrior_shasui-1, mv1_gun_drone-2, mv36_guardian_drone-1], 'Tactical Squad 1', _N-_Us), model_sets(_Us, _Ss), forall( nth1(I, _Ss, Si), ( model_set_attacks(Si, _M, _Wn, _Pa, _Wa), number_of_attacks(_M, _Pa, _Wa, _Wn, _A), hit_roll(_A, (5+), 0, Hn), format('Model-set ~w:~n', [I]), forall(member(Mi,Si),writeln(Mi)), format('hits ~w times in ~w attacks.~n', [_A,Hn]) ) ).
-Model-set 1:
-model(mv36_guardian_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,guardian_field-1)
-hits 0 times in 0 attacks.
-Model-set 2:
-model(mv1_gun_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,pulse_carbine-2)
-model(mv1_gun_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,pulse_carbine-2)
-hits 8 times in 2 attacks.
-Model-set 3:
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,pulse_rifle-1)
-model(fire_warrior_shasui,6,+ 5,+ 4,3,3,1,1,7,+ 4,pulse_rifle-1)
-hits 8 times in 2 attacks.
+?- models_unit([fire_warrior-11, fire_warrior_shasui-1,mv1_gun_drone-1, mv36_guardian_drone-1], 'Strike Team 1', _N-_Us), model_sets(_Us, _Ss), forall(nth1(I, _Ss, [_M1|_Si]), (length([_M1|_Si], L), format('Model set ~w:~n ~w x ~w~n',[I, L,_M1]), model_value(_M1, wargear, _Ws), forall(member(_Wg-_Wn,_Ws), (model_set_attacks([_M1|_Si], _Wg, 8, none, _Mn, _Pa, _Wa, _Mod) , number_of_attacks(_Mn, _Pa, _Wa, _Wn, _A), hit_roll(_A, (5+), 0, Hn), format('Hits from ~w attacks with weapon ~w: ~w~n', [_A,_Wg,Hn]))))).
+Model set 1:
+ 1 x model(mv36_guardian_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,[guardian_field-1])
+Hits from 0 attacks with weapon guardian_field: 0
+Model set 2:
+ 1 x model(mv1_gun_drone,8,+ 5,+ 5,3,4,1,1,6,+ 4,[pulse_carbine-2])
+Hits from 4 attacks with weapon pulse_carbine: 2
+Model set 3:
+ 12 x model(fire_warrior,6,+ 5,+ 4,3,3,1,1,6,+ 4,[pulse_rifle-1,photon_grenade-1])
+Hits from 24 attacks with weapon pulse_rifle: 9
+Hits from 60 attacks with weapon photon_grenade: 21
 true.
 ```
 
-**Roll to wound models in a target unit:**
+Roll to wound models in a target unit:
 ```
-?- models_unit([mv1_gun_drone-12, mv36_guardian_drone-1], 'Tactical Squad 1', _N-_Us), wound_roll(8, 4, 4, Wounds).
-Wounds = 2.
+TODO
 ```
 
-**Allocate wounds to models in a unit:**
+Sorry, that gets a bit too verbose to do at the top-level.
+
+Allocate wounds to models in a unit:
 ```
 ?- models_unit([mv1_gun_drone-12, mv36_guardian_drone-1], 'Drone Squad 1', _N-_Us), allocate_wounds(10, _Us, _Ms), forall(member(Mi-Ws, _Ms), (model_value(Mi,'W',Wi), model_value(Mi,name,Nm), format('Allocated ~w wounds to ~w with ~w wounds remaining~n', [Ws, Nm, Wi]))), configuration:wound_allocation_strategy(_WAS), format('Wounds allocated by strategy ~w~n', [_WAS]).
 Allocated 0 wounds to mv1_gun_drone with 1 wounds remaining
@@ -547,7 +557,7 @@ those models with the fewer wounds left are first in line for wounds to be
 allocated to their unit. This is a bit meh, but like I keep saying, we're still
 in beta, ja?
 
-**Roll to save for each model in a set of models** to which wounds have been
+Roll to save for each model in a set of models to which wounds have been
 allocated taking into account attacker's AP and defender's cover bonus and
 report remaining unsaved wounds:
 ```
@@ -568,7 +578,7 @@ mv1_gun_drone failed 1 saves
 true.
 ```
 
-**Inflict damage and modify models' wounds accordingly**:
+Inflict damage and modify models' wounds accordingly:
 ```
 ?- models_unit([mv1_gun_drone-10], 'Tactical Drones 1', _N-_Us), allocate_wounds(10, _Us, _Ms), saving_throws(_Ms, -1, 0, _Fs), inflict_damage(_Fs, 3, _Rs), forall(member(Ri, _Rs), (model_value(Ri, 'W', Ws), model_value(Ri,name,Nm), format('Model ~w has ~w wounds remaining~n', [Nm,Ws])) ).
 Model mv1_gun_drone has -2 wounds remaining
@@ -584,8 +594,8 @@ Model mv1_gun_drone has 1 wounds remaining
 true.
 ```
 
-**Simulate one round of shooting, start to end, reporting survivors in the
-target unit:**
+Simulate one round of shooting, start to end, reporting survivors in the
+target unit:
 ```
 _Parameters = [15, standard, 0], models_unit([fire_warrior-11, fire_warrior_shasui-1], 'Strike Team 1', _N-_Us), model_sets(_Us, _Ms), models_unit([space_marine_sergeant-1, space_marine-4], 'Tactical Squad 1', _N2-_Us2), shooting_sequence(_Ms, _Us2, _Parameters, _Ss), forall(member(Si, _Ss), writeln(Si)), length(_Ss, Survivors).
 model(space_marine,6,+ 3,+ 3,4,4,1,1,7,+ 3,boltgun-1)
