@@ -113,13 +113,14 @@ unit_profiles(tactical_squad,space_marine,6,3+,3+,4,4,1,1,7,3+).
 unit_profiles(tactical_squad,space_marine_sergeant,6,3+,3+,4,4,1,2,8,3+).
 
 
+
 %!	damaged_profiles(?Id,?Max_wounds,?Min_wounds,?Mods) is det.
 %
 %	Changes to a unit's profile as damage accrues.
 %
 damaged_profiles(kv128_stormsurge,20,11,[4+,8,3]).
-damaged_profiles(kv128_stormsurge,10,6,[5+,4,d3]).
-damaged_profiles(kv128_stormsurge,5,1,[4+,8,3]).
+damaged_profiles(kv128_stormsurge,10,6,[5+,7,d3]).
+damaged_profiles(kv128_stormsurge,5,1,[6+,6,1]).
 
 
 

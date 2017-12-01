@@ -57,7 +57,12 @@ model_value(M, C, V):-
 	,configuration:T
 	,arg(N,T,C)
 	,! % Grrrr.
-	,arg(N,M,V).
+	,arg(N,M,V_)
+	,(   V_ == *
+	 ->  starred_value(M, C, V)
+	 ;   V_ = V
+	 ).
+
 model_value(M, C, V):-
 	nonvar(V)
 	,current_functor(model_characteristics, A)
@@ -66,4 +71,46 @@ model_value(M, C, V):-
 	,configuration:T
 	,arg(N,T,C)
 	,! % Grrrr.
+	% Also, I doubt we'll ever need to set starred stats.
 	,nb_setarg(N,M,V).
+
+
+%!	starred_value(+Model,+Characterstic,-Value) is det.
+%
+%	Retrieve the current Value of a starred Characteristic.
+%
+%	Note that this will not _set_ a starred Characteristic. I doubt
+%	that is ever done.
+%
+starred_value(M,C,V):-
+	model_value(M,name,Nm)
+	,model_value(M,'W',W)
+	,wound_range_modifiers(Nm,W,Mods)
+	,starred_indices(M, I)
+	,characteristic_index(C, J)
+	,nth1(K,I,J)
+	,! % Cut unnecessary backtracking over nth1/3 above.
+	,nth1(K,Mods,V).
+
+
+%!	wound_range_modifiers(+Name,+Wounds,-Modifiers) is det.
+%
+%	The list of Modifiers associated with a model's current Wounds.
+%
+wound_range_modifiers(Nm,W,Mods):-
+	damaged_profiles(Nm,Max,Min,Mods)
+	,between(Min,Max,W).
+
+
+%!	starred_indices(+Model, +Indices) is det.
+%
+%	Retrieve the indices of a Model's starred characteristics.
+%
+starred_indices(M, Is):-
+	functor(M,_,N)
+	,findall(I
+		,(between(1,N,I)
+		 ,arg(I,M,*)
+
+		 )
+		,Is).
