@@ -104,7 +104,7 @@ unit_profiles(lord_of_contagion,lord_of_contagion,4,2+,2+,4,5,6,4,9,2+).
 unit_profiles(kv128_stormsurge,kv128_stormsurge,6,5+,*,*,7,20,*,8,3+).
 unit_profiles(strike_team,fire_warrior,6,5+,4+,3,3,1,1,6,4+).
 unit_profiles(strike_team,fire_warrior_shasui,6,5+,4+,3,3,1,1,7,4+).
-unit_profiles(strike_team,ds8_tactical_support_turret,nil,nil,4+,3,3,1,0,4,4+).
+unit_profiles(strike_team,ds8_tactical_support_turret,-,-,4+,3,3,1,0,4,4+).
 unit_profiles(strike_team,mv36_guardian_drone,8,5+,5+,3,4,1,1,6,4+).
 unit_profiles(tactical_drones,mv1_gun_drone,8,5+,5+,3,4,1,1,6,4+).
 unit_profiles(tactical_drones,mv4_shield_drone,8,5+,5+,3,4,1,1,6,4+).
@@ -356,7 +356,7 @@ weapon(plaguereaper, base, melee, melee, +2, -3, 3, [plague_weapon]).
 weapon(airbursting_fragmentation_projector,base,18,assault(d6),4,0,1,[non_visible_targets]).
 weapon(burst_cannon,base,18,assault(4),5,0,1,[]).
 weapon(cluster_rocket_system,base,48,heavy('4d6'),5,0,1,[]).
-weapon(destroyer_missile,base,60,heavy(1),nil,nil,nil,[inflicts_mortal_wounds(d3)
+weapon(destroyer_missile,base,60,heavy(1),-,-,-,[inflicts_mortal_wounds(d3)
 						      ,single_use
 						      ,hit_on_a(6)]).
 weapon(flamer,base,8,assault(d6),4,0,1,[auto_hits]).
@@ -366,12 +366,12 @@ weapon(pulse_blastcannon,long_range,30,heavy(6),10,-3,d6,[]).
 weapon(pulse_driver_cannon,base,72,heavy(d3),10,-3,d6,[if_target(models(10+),heavy(d6))]).
 weapon(smart_missile_system,base,30,heavy(4),5,0,1,[non_visible_targets
 						   ,strips_bonus(cover)]).
-weapon(markerlight,base,36,heavy(1),nil,nil,nil,[markerlight]).
+weapon(markerlight,base,36,heavy(1),-,-,-,[markerlight]).
 weapon(missile_pod,base,36,assault(2),7,-1,d3,[]).
 weapon(pulse_carbine,base,18,assault(2),5,0,1,[]).
 weapon(pulse_pistol,base,12,pistol(1),5,0,1,[]).
 weapon(pulse_rifle,base,30,rapid_fire(1),5,0,1,[]).
-weapon(photon_grenade,base,12,grenade(d6),nil,nil,nil,[photon_grenade]).
+weapon(photon_grenade,base,12,grenade(d6),-,-,-,[photon_grenade]).
 weapon(bolt_pistol,base,12,pistol(1),4,0,1,[]).
 weapon(boltgun,base,24,rapid_fire(1),4,0,1,[]).
 weapon(frag_grenade,base,6,grenade(d6),3,0,1,[]).
