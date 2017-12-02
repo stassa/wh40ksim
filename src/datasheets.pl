@@ -403,7 +403,7 @@ faction_keyword(tactical_squad,<chapter>).
 
 
 
-%!	faction_keyword(?Id, ?Keywords) is semidet.
+%!	keyword(?Id, ?Keywords) is semidet.
 %
 %	Unit's other (i.e. non-faction) keywords.
 %
