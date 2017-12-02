@@ -1,9 +1,15 @@
-:-module(configuration, [model_characteristics/11
+:-module(configuration, [format_string/2
+			,model_characteristics/11
 			,weapon_characteristics/8
 			,wound_allocation_strategy/1
 			]).
 
 
+%!	format_string(?Predicate,?Format) is det.
+%
+%	Pretty-printing format used in a display module Predicate.
+%
+format_string(print_header, '~w ~*+~w ~*+~w ~*+~w~n').
 
 %!	model_characteristics(?Unit,?Name,?M,?WS,?BS,?S,?T,?W,?A,?Ld,?Sv,?Wg)
 %	is semidet.

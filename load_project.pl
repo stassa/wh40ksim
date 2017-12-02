@@ -17,6 +17,7 @@ user:file_search_path(mathemagicks, project_root(lib/mathemagicks/src)).
 :-use_module(src(dice)).
 :-use_module(src(model)).
 :-use_module(src(simulation)).
+:-use_module(src(display)).
 
 edit_files:-
 	edit(project_root(load_project))
@@ -27,6 +28,7 @@ edit_files:-
 	,edit(src(dice))
 	,edit(src(model))
 	,edit(src(wargear))
+	,edit(src(display))
 	.
 :-edit_files.
 
