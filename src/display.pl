@@ -39,9 +39,10 @@ pretty_print(datasheet, Id):-
 	/*,unit_composition(Id, Model_type, Number)
 	,unit_composition_options(Id,Model,Number_in,Substitute,Number_out,Power_mod)*/
 	,unit_wargear(Profiles, WGs)
-	/*,wargear_options(Id,Item,Wg_Number_out,Wg_Substitute,Wg_Number_in)
-	,abilities(Id, Abilities)
-	,weapons(Id, Weapons)*/
+	/*,wargear_options(Id,Item,Wg_Number_out,Wg_Substitute,Wg_Number_in)*/
+	%,abilities(Id, Abilities)
+	,unit_abilities(Id, Abilities)
+	/*,weapons(Id, Weapons)*/
 	,unit_weapon_groups(WGs, Grouped)
 	/*,faction_keyword(Id, Fc_Keywords)
 	,keyword(Id, Keywords)*/
@@ -49,6 +50,7 @@ pretty_print(datasheet, Id):-
 	,print_profiles(user_output,Profiles)
 	,print_damaged_profiles(user_output,Dmg_profiles)
 	,print_weapons(user_output,Grouped)
+	,print_abilities(user_output,Abilities)
 	.
 
 
@@ -111,6 +113,16 @@ unit_weapon_groups(Wargear, Grouped):-
 		)
 	       ,Weapons)
 	,group_by_weapon_Id(Weapons,Grouped).
+
+
+%!	unit_weapon_groups(+Id,-Abilities) is det.
+%
+%	Collect the Abilities listed on a unit's datasheet.
+%
+unit_abilities(Id, Abilities):-
+	findall(Ability
+	       ,abilities(Id, Ability)
+	       ,Abilities).
 
 
 /*   == Printing unit characterstics ==  */
@@ -346,6 +358,32 @@ print_weapon_profiles(Stream,Profiles,[Sp1,C2W,Sp3,Sp4,Mn]):-
 		)
 	       ).
 
+
+%!	print_abilities(+Stream, +Abilities) is det.
+%
+%	Print a unit's abilities.
+%
+print_abilities(Stream,Abilities):-
+	configuration:print_unit_ability_text(true)
+	,!
+	,overline_length(TW)
+	,CW = 30
+	,print_overline(Stream,-)
+	,forall(member(Ability,Abilities)
+	       ,(configuration:unit_ability_text(Ability,Text)
+		,printcase(Ability,A)
+		,format(Stream,'~w~*| ~w~t~*|~n',[A,CW,Text,TW])
+		)
+	       ).
+print_abilities(Stream,Abilities):-
+	overline_length(TW)
+	,CW = 30
+	,print_overline(Stream,-)
+	,forall(member(Ability,Abilities)
+	       ,(printcase(Ability,A)
+		,format(Stream,'~w~n',[A,CW,TW])
+		)
+	       ).
 
 
 /*   == Auxiliary predicates ==  */
