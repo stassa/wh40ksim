@@ -133,12 +133,15 @@ print_header(S,N,F,R,P):-
 		 )
 		,Ds)
 	,flatten(Ds, [N_,F_,P_,R_])
-	% Print unit name
+	% Print unit name, centered over full table width
 	,format(S, '~t~w~t~*|~n',[N_,TW])
 	% Print separator line
 	,print_overline(S,=)
+	% Print header line, with Role left-aligned, Power centered
+	% and Faction right-aligned in columns of width CW.
         ,format('~w~*| ~t~w~t~*+ ~t~w~*+ ~*|~n',
                ['Role',CW,'Power',CW,'Faction',CW,TW])
+	% Then their values with the same alignment and column widths
         ,format('~w~*| ~t~w~t~*+ ~t~w~*+ ~*|~n',
                [R_,CW,P_,CW,F_,CW,TW])
 	.
@@ -149,38 +152,44 @@ print_header(S,N,F,R,P):-
 %	Print the profile of each model in a unit.
 %
 print_profiles(Str, Profiles):-
-	Sp1 = 30 % Padding for Name column
-	,Sp2 = 4 % Padding for each other column
+	overline_length(TW) % Table width
+	,C1W = 30 % Width of Name column
+	,CW = 4 % Width o f remaining columns.
 	% Profile header text and padding
-	,PH = ['Name',Sp1
-	      ,'M',Sp2
-	      ,'WS',Sp2
-	      ,'BS',Sp2
-	      ,'S',Sp2
-	      ,'T',Sp2
-	      ,'W',Sp2
-	      ,'A',Sp2
-	      ,'Ld',Sp2
-	      ,'Sv']
+	,PH = ['Name',C1W
+	      ,'M',CW
+	      ,'WS',CW
+	      ,'BS',CW
+	      ,'S',CW
+	      ,'T',CW
+	      ,'W',CW
+	      ,'A',CW
+	      ,'Ld',CW
+	      ,'Sv',CW,TW]
 	,print_overline(Str,-)
-	,format(Str,'~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w~n',PH)
+	% Print each stat title left-padded with columns of width CW
+	% Except the first column that has width C1W (to accommodate
+	% long unit names. I should really automate this decision btw.
+        ,format('~w~*| ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~*|~n', PH)
+
 	,forall(member([Name,M,WS,BS,S,T,W,A,Ld,Sv],Profiles)
 	       ,(atomise(WS,WS_)
 		,atomise(BS,BS_)
 		,atomise(Sv,Sv_)
 		,printcase(Name, Name_)
 		% Profile values text and padding
-		,P = [Name_,Sp1
-		     ,M,Sp2
-		     ,WS_,Sp2
-		     ,BS_,Sp2
-		     ,S,Sp2
-		     ,T,Sp2
-		     ,W,Sp2
-		     ,A,Sp2
-		     ,Ld,Sp2
-		     ,Sv_]
-		,format(Str,'~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w~n',P)
+		,P = [Name_,C1W
+		     ,M,CW
+		     ,WS_,CW
+		     ,BS_,CW
+		     ,S,CW
+		     ,T,CW
+		     ,W,CW
+		     ,A,CW
+		     ,Ld,CW
+		     ,Sv_,CW,TW]
+		% Print stat values with columns and alignment as above.
+		,format('~w~*| ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~*|~n', P)
 		)
 	       ).
 
@@ -192,22 +201,23 @@ print_profiles(Str, Profiles):-
 print_damaged_profiles(_, []):-
 	!.
 print_damaged_profiles(Str,Profiles):-
-	Sp1 = 15
-	,Sp2 = 4
-	,PH = ['Remaining W'
-	      ,Sp1,'BS'
-	      ,Sp2,'S'
-	      ,Sp2,'A'
+	overline_length(TW)
+	,C1W = 15
+	,CW = 4
+	,PH = ['Remaining W',C1W
+	      ,'BS',CW
+	      ,'S',CW
+	      ,'A',CW,TW
 	      ]
 	,print_overline(Str,-)
-	,format(Str,'~w ~*+~w ~*+~w ~*+~w ~n',PH)
+	,format(Str,'~w~*| ~t~w~*+ ~t~w~*+ ~t~w~*+ ~*|~n',PH)
 	,forall(member([Max,Min,[BS,S,A]],Profiles)
 	       ,(atomise(BS,BS_)
-		,format(Str,'~w-~w ~*+~w ~*+~w ~*+~w ~n'
-		       ,[Max,Min
-			,Sp1,BS_
-			,Sp2,S
-			,Sp2,A
+		,format(Str,'~w-~w~*| ~t~w~*+ ~t~w~*+ ~t~w~*+ ~t~*|~n'
+		       ,[Max,Min,C1W
+			,BS_,CW
+			,S,CW
+			,A,CW,TW
 			])
 		)
 	       ).
@@ -218,14 +228,15 @@ print_damaged_profiles(Str,Profiles):-
 %	Print a table of a unit's weapons' information.
 %
 print_weapons(Str,Weapons):-
-	Sp1 = 25
+	overline_length(TW)
+	,C1W = 25
 	% Right padding for Range column
-	,atom_length('Range',Sp2)
+	,atom_length('Range',C2W)
 	% Right-padding for Type column
 	% rapid_fire(ndm) should be the longest weapon type string.
-	,atom_length('rapid_fire(ndm)',Sp3)
+	,atom_length('rapid_fire(ndm)',C3W)
 	% Right padding for remaining columns
-	,Sp4 = 4
+	,C4W = 4
 	% Magic number used to print each weapon abilitiey after
 	% the first in a new row starting a few characters away
 	% from where the last weapon profile column ends.
@@ -233,19 +244,20 @@ print_weapons(Str,Weapons):-
 	% columns before Ability plus a small offset and I should
 	% be able to calculate it.
 	,Mn = 58
-	,PH = ['Weapon'
-	      ,Sp1,'Range'
-	      ,Sp2,'Type'
-	      ,Sp3,'S'
-	      ,Sp4,'AP'
-	      ,Sp4,'D'
-	      ,Sp4,'Abilities'
+	,PH = ['Weapon',C1W
+	      ,'Range',C2W
+	      ,'Type',C3W
+	      ,'S',C4W
+	      ,'AP',C4W
+	      ,'D',C4W
+	      ,'Abilities',C4W,TW
 	      ]
 	,print_overline(Str,-)
-	,format(Str,'~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w~n',PH)
+	,format(Str,'~w~*| ~w~t~*+ ~w~t~*+ ~w~t~*+ ~w~t~*+ ~w~t~*+ ~w~t~*+ ~t~*|~n',PH)
 	,forall(member(W,Weapons)
-	       ,print_weapon_profiles(Str,W,[Sp1,Sp2,Sp3,Sp4,Mn])
+	       ,print_weapon_profiles(Str,W,[C1W,C2W,C3W,C4W,Mn])
 	       ).
+
 
 %!	print_weapon_profiles(+Stream,+Weapon,+Sep1,+Sep2,+Sep3) is det.
 %
@@ -261,9 +273,18 @@ print_weapons(Str,Weapons):-
 %	the text specified in configuration:weapon_ability_text/2.
 %
 print_weapon_profiles(Stream,[weapon(Id,base,Range,Type,S,AP,D,Abilities)]
-		     ,[Sp1,Sp2,Sp3,Sp4,Mn]):-
+		     ,[Sp1,C2W,Sp3,Sp4,Mn]):-
 	!
         ,printcase(Id, Id_)
+	% Do not ask about the Offset.
+	% It just _is_.
+	% OK, seriously, it's probably just for the space
+	% that I leave between formatting elements like
+	% ~w~t~*+ ~w...
+	%        ^ here
+	,Offset = 1
+	,Sp2 is C2W + Offset
+	,Mn_ is Mn + 1
 	,P = [Id_,Sp1
 	     ,Range,Sp2
 	     ,Type,Sp3
@@ -274,7 +295,7 @@ print_weapon_profiles(Stream,[weapon(Id,base,Range,Type,S,AP,D,Abilities)]
 	     ,forall(member(Ability,Abilities)
 			    ,(
 			       (    configuration:weapon_ability_text(Ability,Frmt,Args)
-			       ->   atomic_list_concat([~,Mn,+,Frmt,~,n],'',F)
+			       ->   atomic_list_concat(['~',Mn_,'|',Frmt,'~t~n'],'',F)
 			           ,format(Stream, F, Args)
 			       ;    true
 			      )
@@ -287,13 +308,18 @@ print_weapon_profiles(Stream,[weapon(Id,base,Range,Type,S,AP,D,Abilities)]
 	      )
 
 	     ]
-	% Not the format string doesn't have a newline at the end.
-	,format(Stream,'~w~*+~w~*+ ~w~*+ ~w~*+ ~w~*+ ~w~*+ ~@~@',P).
-print_weapon_profiles(Stream,Profiles,[Sp1,Sp2,Sp3,Sp4,Mn]):-
+	% Note the format string doesn't have a newline at the end.
+	,format(Stream,'~w~*| ~w~t~*+ ~w~t~*+ ~w~t~*+ ~w~t~*+ ~w~t~*+ ~@~@',P)
+	.
+
+print_weapon_profiles(Stream,Profiles,[Sp1,C2W,Sp3,Sp4,Mn]):-
 	Profiles = [W|_]
 	,W = weapon(Id,_,_,_,_,_,_,_)
 	,printcase(Id, Id_)
 	,format(Stream,'~w~n',[Id_])
+	,Offset = 1
+	,Sp2 is C2W + Offset
+	,Mn_ is Mn + 1
 	,forall(member(weapon(_,Profile,Range,Type,S,AP,D,Abilities), Profiles)
 	       ,(printcase(Profile,Profile_)
 		,P = [Profile_,Sp1
@@ -303,19 +329,23 @@ print_weapon_profiles(Stream,Profiles,[Sp1,Sp2,Sp3,Sp4,Mn]):-
 		     ,AP,Sp4
 		     ,D,Sp4
 		     ,forall(member(Ability,Abilities)
-			     ,(configuration:weapon_ability_text(Ability,Frmt,Args)
-			      ,atomic_list_concat([~,Mn,+,Frmt,~,n],'',F)
-			      ,format(Stream, F, [Args])
-			      )
+			    ,(
+				 (    configuration:weapon_ability_text(Ability,Frmt,Args)
+				 ->   atomic_list_concat(['~',Mn_,'|',Frmt,'~t~n'],'',F)
+				 ,format(Stream, F, Args)
+				 ;    true
+				 )
+			     )
 			    )
 		     ,(	 Abilities = []
 		      ->  nl(Stream)
-		      ;	    true
+		      ;	      true
 		      )
 		     ]
-		,format(Stream,'- ~w~*+~w~*+ ~w~*+ ~w~*+ ~w~*+ ~w~*+ ~@~@',P)
+		,format(Stream,'- ~w~*| ~w~t~*+ ~w~t~*+ ~w~t~*+ ~w~t~*+ ~w~t~*+ ~@~@',P)
 		)
 	       ).
+
 
 
 /*   == Auxiliary predicates ==  */
