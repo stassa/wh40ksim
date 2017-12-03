@@ -68,7 +68,7 @@ unit_ability_text(ds8_tactical_support_turret, 'A deploy-once immobile gun turre
 unit_ability_text(threat_identification_protocols,'Only shoots at nearest visible target.').
 unit_ability_text(shield_generator, 'Shild Drones have a 4+ Invulnerable save').
 unit_ability_text(stable_platform, 'Ignores heavy weapons shooting penalties.').
-unit_ability_text(and_the_shall_know_no_fear, 'They say "no-no" to fear').
+unit_ability_text(and_they_shall_know_no_fear, 'They say "no-no" to fear').
 unit_ability_text(combat_squads, '10-model squads may be deployed as two 5-model ones').
 
 
