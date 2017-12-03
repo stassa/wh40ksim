@@ -44,13 +44,15 @@ pretty_print(datasheet, Id):-
 	,unit_abilities(Id, Abilities)
 	/*,weapons(Id, Weapons)*/
 	,unit_weapon_groups(WGs, Grouped)
-	/*,faction_keyword(Id, Fc_Keywords)
-	,keyword(Id, Keywords)*/
+	%,faction_keyword(Id, Fc_Keywords)
+	,unit_faction_keywords(Id, Fc_Keywords)
+	/*,keyword(Id, Keywords)*/
 	,print_header(user_output,Id,Faction,Role,Power)
 	,print_profiles(user_output,Profiles)
 	,print_damaged_profiles(user_output,Dmg_profiles)
 	,print_weapons(user_output,Grouped)
 	,print_abilities(user_output,Abilities)
+	,print_faction_keywords(user_output,Fc_Keywords)
 	.
 
 
@@ -123,6 +125,16 @@ unit_abilities(Id, Abilities):-
 	findall(Ability
 	       ,abilities(Id, Ability)
 	       ,Abilities).
+
+
+%!	unit_faction_keywords(+Id,-Keywords) is det.
+%
+%	Collect all of a unit's Faction Keywords.
+%
+unit_faction_keywords(Id, Keywords):-
+	findall(Keyword
+	       ,faction_keyword(Id, Keyword)
+	       ,Keywords).
 
 
 /*   == Printing unit characterstics ==  */
@@ -376,12 +388,36 @@ print_abilities(Stream,Abilities):-
 		)
 	       ).
 print_abilities(Stream,Abilities):-
-	overline_length(TW)
-	,CW = 30
-	,print_overline(Stream,-)
+	print_overline(Stream,-)
 	,forall(member(Ability,Abilities)
 	       ,(printcase(Ability,A)
-		,format(Stream,'~w~n',[A,CW,TW])
+		,format(Stream,'~w~n',[A])
+		)
+	       ).
+
+
+%!	print_faction_keywords(+Stream,+Keywords) is det.
+%
+%	Print all of a unit's faction Keywords.
+%
+print_faction_keywords(Stream,Keywords):-
+	print_overline(Stream,-)
+	,forall(member(Keyword,Keywords)
+	       ,(printcase(Keyword,K)
+		,format(Stream,'~w~n',[K])
+		)
+	       ).
+
+
+%!	print_keywords(+Stream,+Keywords) is det.
+%
+%	Print all of a unit's ordinary (non-faction) Keywords.
+%
+print_keywords(Stream,Keywords):-
+	print_overline(Stream,-)
+	,forall(member(Keyword,Keywords)
+	       ,(printcase(Keyword,K)
+		,format(Stream,'~w~n',[K])
 		)
 	       ).
 
@@ -422,6 +458,12 @@ group_by_weapon_Id(Ws,Gs):-
 %
 %	Capitalise underscore-separated words in an Atom.
 %
+printcase(<T>, Tc):-
+% Will deal with keywords in <>'s but only for single words.
+% I think that should do but if this breaks...
+	!
+	,printcase(T,T_)
+	,atomic_list_concat([<,T_,>],Tc).
 printcase(T, Tc):-
 	atomic_list_concat(Ts, '_', T)
 	,findall(Up
