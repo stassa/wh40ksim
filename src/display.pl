@@ -122,9 +122,10 @@ unit_weapon_groups(Wargear, Grouped):-
 %
 print_header(S,N,F,R,P):-
 	configuration:format_string(print_header,_Ft)
-        % Column length; totally eyballed.
-	% Matches rest rows' columns.
-	,Sp = 25
+	% Table width
+	,overline_length(TW)
+	% Column width, for each of three columns
+	,CW is round(TW / 3)
 	% Convert text to printcase
 	,findall(T_
 		,(member(T, [N,F,P,R])
@@ -133,11 +134,13 @@ print_header(S,N,F,R,P):-
 		,Ds)
 	,flatten(Ds, [N_,F_,P_,R_])
 	% Print unit name
-	,format(S, '~*+~w~n',[Sp,N_])
+	,format(S, '~t~w~t~*|~n',[N_,TW])
 	% Print separator line
 	,print_overline(S,=)
-	,format(S, '~w ~*+~w ~*+~w~n',['Role',Sp,'Power',Sp,'Faction'])
-	,format(S, '~w ~*+~w ~*+~w~n',[R_,Sp,P_,Sp,F_])
+        ,format('~w~*| ~t~w~t~*+ ~t~w~*+ ~*|~n',
+               ['Role',CW,'Power',CW,'Faction',CW,TW])
+        ,format('~w~*| ~t~w~t~*+ ~t~w~*+ ~*|~n',
+               [R_,CW,P_,CW,F_,CW,TW])
 	.
 
 
@@ -325,7 +328,6 @@ print_overline(S,A):-
 	overline_length(Ovrln)
 	,atom_codes(A,[C])
 	,format(S, '~*t~*+~n', [C,Ovrln]).
-
 
 
 %!	group_by_weapon_Id(+Weapons,-Grouped) is det.
