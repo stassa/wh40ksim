@@ -356,9 +356,9 @@ weapon(plaguereaper, base, melee, melee, +2, -3, 3, [plague_weapon]).
 weapon(airbursting_fragmentation_projector,base,18,assault(d6),4,0,1,[non_visible_targets]).
 weapon(burst_cannon,base,18,assault(4),5,0,1,[]).
 weapon(cluster_rocket_system,base,48,heavy('4d6'),5,0,1,[]).
-weapon(destroyer_missile,base,60,heavy(1),-,-,-,[inflicts_mortal_wounds(d3)
-						      ,single_use
-						      ,hit_on_a(6)]).
+weapon(destroyer_missiles,base,60,heavy(1),-,-,-,[inflicts_mortal_wounds(d3)
+						 ,single_use
+						 ,hit_on_a(6)]).
 weapon(flamer,base,8,assault(d6),4,0,1,[auto_hits]).
 weapon(pulse_blastcannon,close_range,10,heavy(2),14,-4,6,[]).
 weapon(pulse_blastcannon,medium_range,20,heavy(4),12,-2,3,[]).
