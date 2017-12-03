@@ -40,7 +40,6 @@ pretty_print(datasheet, Id):-
 	,unit_composition_options(Id,Model,Number_in,Substitute,Number_out,Power_mod)*/
 	,unit_wargear(Profiles, WGs)
 	/*,wargear_options(Id,Item,Wg_Number_out,Wg_Substitute,Wg_Number_in)*/
-	%,abilities(Id, Abilities)
 	,unit_abilities(Id, Abilities)
 	/*,weapons(Id, Weapons)*/
 	,unit_weapon_groups(WGs, Grouped)
