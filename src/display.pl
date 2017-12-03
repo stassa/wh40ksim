@@ -44,15 +44,15 @@ pretty_print(datasheet, Id):-
 	,unit_abilities(Id, Abilities)
 	/*,weapons(Id, Weapons)*/
 	,unit_weapon_groups(WGs, Grouped)
-	%,faction_keyword(Id, Fc_Keywords)
 	,unit_faction_keywords(Id, Fc_Keywords)
-	/*,keyword(Id, Keywords)*/
+	,unit_keywords(Id, Keywords)
 	,print_header(user_output,Id,Faction,Role,Power)
 	,print_profiles(user_output,Profiles)
 	,print_damaged_profiles(user_output,Dmg_profiles)
 	,print_weapons(user_output,Grouped)
 	,print_abilities(user_output,Abilities)
 	,print_faction_keywords(user_output,Fc_Keywords)
+	,print_keywords(user_output,Keywords)
 	.
 
 
@@ -135,6 +135,17 @@ unit_faction_keywords(Id, Keywords):-
 	findall(Keyword
 	       ,faction_keyword(Id, Keyword)
 	       ,Keywords).
+
+
+%!	unit_keywords(+Id,-Keywords) is det.
+%
+%	Collect all of a unit's non-faction Keywords.
+%
+unit_keywords(Id, Keywords):-
+	findall(Keyword
+	       ,keyword(Id, Keyword)
+	       ,Keywords).
+
 
 
 /*   == Printing unit characterstics ==  */
@@ -474,7 +485,6 @@ printcase(T, Tc):-
 		 )
 		,T_)
 	,atomic_list_concat(T_, ' ', Tc).
-
 
 
 %!	atomise(+Tn,-Atomic) is det.
