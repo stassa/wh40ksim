@@ -215,22 +215,33 @@ print_damaged_profiles(Str,Profiles):-
 %	Print a table of a unit's weapons' information.
 %
 print_weapons(Str,Weapons):-
-	Sp1 = 30
+	Sp1 = 25
+	% Right padding for Range column
 	,atom_length('Range',Sp2)
+	% Right-padding for Type column
 	% rapid_fire(ndm) should be the longest weapon type string.
 	,atom_length('rapid_fire(ndm)',Sp3)
+	% Right padding for remaining columns
+	,Sp4 = 4
+	% Magic number used to print each weapon abilitiey after
+	% the first in a new row starting a few characters away
+	% from where the last weapon profile column ends.
+	% Totally eyballed but is basically the length of all
+	% columns before Ability plus a small offset and I should
+	% be able to calculate it.
+	,Mn = 58
 	,PH = ['Weapon'
 	      ,Sp1,'Range'
 	      ,Sp2,'Type'
 	      ,Sp3,'S'
-	      ,Sp2,'AP'
-	      ,Sp2,'D'
-	      ,Sp2,'Abilities'
+	      ,Sp4,'AP'
+	      ,Sp4,'D'
+	      ,Sp4,'Abilities'
 	      ]
 	,print_overline(Str,-)
 	,format(Str,'~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w ~*+~w~n',PH)
 	,forall(member(W,Weapons)
-	       ,print_weapon_profiles(Str,W,Sp1,Sp2,Sp3)
+	       ,print_weapon_profiles(Str,W,[Sp1,Sp2,Sp3,Sp4,Mn])
 	       ).
 
 %!	print_weapon_profiles(+Stream,+Weapon,+Sep1,+Sep2,+Sep3) is det.
@@ -246,21 +257,16 @@ print_weapons(Str,Weapons):-
 %	Abilities of Weapon are also printed, one on each line, using
 %	the text specified in configuration:weapon_ability_text/2.
 %
-print_weapon_profiles(Stream,[weapon(Id,base,Range,Type,S,AP,D,Abilities)],Sp1,Sp2,Sp3):-
+print_weapon_profiles(Stream,[weapon(Id,base,Range,Type,S,AP,D,Abilities)]
+		     ,[Sp1,Sp2,Sp3,Sp4,Mn]):-
 	!
-	% Magic number used to print abilities in a column
-	% starting a few characters away from where the last
-	% weapon profile column ends. Totally eyballed but is
-	% basically the length of all columns before Ability
-	% plus a small offset.
-	,Mn = 67
         ,printcase(Id, Id_)
 	,P = [Id_,Sp1
 	     ,Range,Sp2
 	     ,Type,Sp3
-	     ,S,Sp2
-	     ,AP,Sp2
-	     ,D,Sp2
+	     ,S,Sp4
+	     ,AP,Sp4
+	     ,D,Sp4
 	      % Print each ability
 	     ,forall(member(Ability,Abilities)
 			    ,(
@@ -280,20 +286,19 @@ print_weapon_profiles(Stream,[weapon(Id,base,Range,Type,S,AP,D,Abilities)],Sp1,S
 	     ]
 	% Not the format string doesn't have a newline at the end.
 	,format(Stream,'~w~*+~w~*+ ~w~*+ ~w~*+ ~w~*+ ~w~*+ ~@~@',P).
-print_weapon_profiles(Stream,Profiles,Sp1,Sp2,Sp3):-
+print_weapon_profiles(Stream,Profiles,[Sp1,Sp2,Sp3,Sp4,Mn]):-
 	Profiles = [W|_]
 	,W = weapon(Id,_,_,_,_,_,_,_)
 	,printcase(Id, Id_)
-	,Mn = 67
 	,format(Stream,'~w~n',[Id_])
 	,forall(member(weapon(_,Profile,Range,Type,S,AP,D,Abilities), Profiles)
 	       ,(printcase(Profile,Profile_)
 		,P = [Profile_,Sp1
 		     ,Range,Sp2
 		     ,Type,Sp3
-		     ,S,Sp2
-		     ,AP,Sp2
-		     ,D,Sp2
+		     ,S,Sp4
+		     ,AP,Sp4
+		     ,D,Sp4
 		     ,forall(member(Ability,Abilities)
 			     ,(configuration:weapon_ability_text(Ability,Frmt,Args)
 			      ,atomic_list_concat([~,Mn,+,Frmt,~,n],'',F)
