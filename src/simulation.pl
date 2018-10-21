@@ -591,6 +591,8 @@ hit_roll(A, BS, Ms, Hn):-
 %
 wound_roll(0, _, _, 0):-
 	!.
+wound_roll(_, -, _, 0):-
+	!.
 wound_roll(_, nil, _, 0):-
 	!.
 wound_roll(Hn, S, T, Wn):-
