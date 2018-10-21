@@ -765,7 +765,9 @@ inflict_damage(Ms, D, Rs):-
 	% an NdM die size term
 	(   number(D)
 	->  D_ = D
-	;   D = nil
+	;   D = - % e.g. photon grenades.
+	->  D_ = 0
+	;   D = nil % Not sure if this is the case anymore.
 	->  D_ = 0
 	;   roll(D, D_)
 	)
