@@ -72,7 +72,7 @@ if the charge succeeds).
 %
 k_simulations_report(K, N, S, Ps):-
 	k_simulations(K, N, S, Ps, Rs)
-	,format('Ran ~w simulations of ~w rounds each.~n', [K,n])
+	,format('Ran ~w simulations of ~w rounds each.~n', [K,N])
 	,findall(L
 		,(member(Ri-_I, Rs)
 		 ,length(Ri, L)
