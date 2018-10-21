@@ -1,4 +1,9 @@
-:-module(scripts, [models_attacks/4
+:-module(scripts, [models_allocated_wounds/3
+		  ,list_models_allocated_wounds/2
+		  ,hits_roll_to_wound/4
+		  ,unit_roll_to_hit/4
+		  ,list_unit_roll_to_hit/3
+		  ,models_attacks/4
 		  ,list_models_attacks/3
 		  ,models_unit_sets/2
 		  ,list_models_unit_sets/2
@@ -13,6 +18,108 @@ passed in by the json.
 */
 
 :-use_module(src(unit)).
+:-use_module(src(simulation)).
+
+
+
+%!	models_allocated_wounds(+Models,+Wounds,-Allocated) is det.
+%
+%	List the Wounds allocated to the Models in a unit.
+%
+models_allocated_wounds(Ms,Ws,Walloc):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,allocate_wounds(Ws, Us, Walloc).
+
+
+
+%!	list_models_allocated_wounds(+Models,+Wounds) is det.
+%
+%	List the Wounds allocated to the Models in a unit.
+%
+list_models_allocated_wounds(Ms,Walloc):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,allocate_wounds(Walloc, Us, MsWs)
+	,forall(member(Mi-Ws, MsWs)
+	       ,(model_value(Mi,'W',Wi)
+		,model_value(Mi,name,Nm)
+		,format('Allocated ~w wounds to ~w with ~w wounds remaining~n'
+		       , [Ws, Nm, Wi])
+		)
+	       ).
+
+
+
+%!	hits_roll_to_wound(+Hits,+Strength,+Toughness,-Wounds) is det.
+%
+%	Roll to wound for a number of Hits.
+%
+%	Hits is the number of hits scored by a unit, e.g. as calculated
+%	by hit_roll/4. Strength is the strenght of the unit's weapons,
+%	whereas Toughness is the toughness of their target. Wounds is a
+%	number indicating the number of wounds rolled by the unit over
+%	all Hits.
+%
+hits_roll_to_wound(Hn,S,T,Wn):-
+	wound_roll(Hn, S, T, Wn).
+
+
+%!	unit_roll_to_hit(+Models,+Distance,+Movement,-Hits) is det.
+%
+%	Roll to hit for all Models in a unit.
+%
+%	Distance is the distance of the Models in the unit to their
+%	target; Movement is the movement type of the unit.
+%
+%	Hits is a list of lists of compounds Model-Wargear:Hits, where
+%	each Model is the name of a type of model in one of the
+%	modelsets the unit, Wargear is the type of wargear for models in
+%	that set and Hits are the total hits rolled by that type of
+%	model.
+%
+unit_roll_to_hit(Ms,D,Mv,Hs):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,model_sets(Us, Ss)
+	,findall(Nm_Wg_Hn % List of hits by model type and wargear
+		,(member([M1|Si],Ss)
+		 ,model_value(M1, wargear, Ws)
+		 ,model_value(M1, name, Nm)
+		 ,findall(Nm-Wg:Hn
+			 ,(member(Wg-Wn, Ws)
+			  ,model_set_attacks([M1|Si], Wg, D, Mv, Mn, Pa, Wa, _Mod)
+			  ,number_of_attacks(Mn, Pa, Wa, Wn, A)
+			  ,hit_roll(A, (5+), 0, Hn)
+			  )
+			 ,Nm_Wg_Hn)
+		 )
+		,Hs). % List of lists as above.
+
+
+
+%!	list_unit_roll_to_hit(+Models,+Distance,+Movement) is det.
+%
+%	List the hits for Models in a unit.
+%
+list_unit_roll_to_hit(Ms,D,Mv):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,model_sets(Us, Ss)
+	,forall(nth1(I, Ss, [M1|Si])
+	       ,(length([M1|Si], L)
+		,format('Model set ~w:~n ~w x ~w~n',[I, L, M1])
+		,model_value(M1, wargear, Ws)
+		,forall(member(Wg-Wn, Ws)
+		       ,(model_set_attacks([M1|Si], Wg, D, Mv, Mn, Pa, Wa, _Mod)
+			,number_of_attacks(Mn, Pa, Wa, Wn, A)
+			,hit_roll(A, (5+), 0, Hn)
+			,format('Hits from ~w attacks with weapon ~w: ~w~n', [A,Wg,Hn])
+			)
+		       )
+		)
+	       ).
+
 
 
 %!	models_attacks(+Unit,+Distance,+Movement,+Attacks) is det.
@@ -23,10 +130,10 @@ passed in by the json.
 %	movement, as accepted by model_set_attacks/8 (one of none,
 %	standard, advance).
 %
-%	Attacks is a list of compounds Model-Wargear:Attacks, where
-%	Model is the name of the models in a model-set in the Unit,
-%	Wargear is a wargear used by Model and Attacks the number of
-%	attacks calculated for that model and wargear in the entire
+%	Attacks is a list of lists of compounds Model-Wargear:Attacks,
+%	where Model is the name of the models in a model-set in the
+%	Unit, Wargear is a wargear used by Model and Attacks the number
+%	of attacks calculated for that model and wargear in the entire
 %	unit.
 %
 %	Note that the numbers represent actual attacks made, not
