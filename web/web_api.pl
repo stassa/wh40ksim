@@ -3,7 +3,7 @@
 :- use_module(library(http/thread_httpd), [http_server/2]).
 :- use_module(library(http/http_dispatch)). % http_dispatch meta-call in http_server/2.
 :- use_module(library(http/http_json), [reply_json/1
-				       ,http_read_json_dict/2
+				       ,http_read_json_dict/3
 				       ,http_read_json/3
 				       ]).
 :- use_module(library(http/http_client), [http_read_data/3]).
@@ -34,7 +34,7 @@ api(Req):-
 	member(method(post), Req)
 	,!
 	,format('Content-type: text/plain~n~n', [])
-	,http_read_json_dict(Req, Data)
+	,http_read_json_dict(Req, Data, [value_string_as(atom)])
 	%,writeln(Data)
 	,api_call(Data.out_vars, Data, Res)
 	,(   nonvar(Res)

@@ -33,6 +33,7 @@ edit_files:-
 	,edit(src(wargear))
 	,edit(src(display))
 	,edit(web(web_api))
+	,edit(scripts(scripts))
 	.
 :-edit_files.
 
