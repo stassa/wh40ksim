@@ -1,4 +1,19 @@
-:-module(scripts, [models_allocated_wounds/3
+:-module(scripts, [k_times_n_rounds/7
+		  ,list_k_times_n_rounds/6
+		  ,n_rounds_report/5
+		  ,n_round_sims/6
+		  ,list_n_round_sims/5
+		  ,make_n_rollouts/5
+		  ,list_n_rollouts/4
+		  ,sequence_sim/5
+		  ,list_sequence_sim/4
+		  ,shooting_round_sim/4
+		  ,list_shooting_round_sim/3
+		  ,models_damage/6
+		  ,list_models_damage/5
+		  ,models_saves/5
+		  ,list_models_saves/4
+		  ,models_allocated_wounds/3
 		  ,list_models_allocated_wounds/2
 		  ,hits_roll_to_wound/4
 		  ,unit_roll_to_hit/4
@@ -19,6 +34,267 @@ passed in by the json.
 
 :-use_module(src(unit)).
 :-use_module(src(simulation)).
+
+
+
+%!	k_times_n_rounds(+K,+N,+Attacker,+Defender,+Sequence,+Scenario,-Results)
+%!	is det.
+%
+%	Run K times N rounds of the given Sequence.
+%
+k_times_n_rounds(K,N,Ms1,Ms2,Sequence,Scenario,Results):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us)
+	,model_sets(Us, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,k_simulations(K, N, Sequence, [MS, Us2, Scenario],Results).
+
+
+
+%!	list_k_times_n_rounds(+K,+N,+Attacker,+Defender,+Sequence,+Scenario)
+%!	is det.
+%
+%	Run K times N rounds of the given Sequence and list the results.
+%
+list_k_times_n_rounds(K,N,Ms1,Ms2,Sequence,Scenario):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us)
+	,model_sets(Us, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,k_simulations_report(K, N, Sequence, [MS, Us2, Scenario]).
+
+
+
+%!	n_rounds_report(+N,+Attacker,+Defender,+Sequence,+Scenario) is
+%!	det.
+%
+%	Report the results of N rounds of the given Sequence.
+%
+%	Uses n_rounds_report/3, supposed to be more of a pretty-printing
+%	facility. It isn't necessarily so.
+%
+n_rounds_report(N,Ms1,Ms2,Sequence,Scenario):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,n_rounds_report(N, Sequence, [MS, Us2, Scenario]).
+
+
+
+%!	n_round_sims(+N,+Attacker,+Defender,+Sequence,+Scenario,-Survivors)
+%!	is det.
+%
+%	Simulate N rounds of a combat Sequence and report the Survivors.
+%
+n_round_sims(N,Ms1,Ms2,Sequence, Scenario,Survivors):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,n_rounds_simulation(N, Sequence, [MS, Us2, Scenario], Survivors).
+
+
+
+%!	list_n_round_sims(+N,+Attacker,+Defender,+Sequence,+Scenario) is
+%!	det.
+%
+%	Simulate N rounds of the given Sequence and list the results.
+%
+list_n_round_sims(N,Ms1,Ms2,Sequence,Scenario):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,n_rounds_simulation(N, Sequence, [MS, Us2, Scenario], Res)
+	,forall(member(Ri,Res)
+	       ,writeln(Ri)
+	       )
+	,length(Res, Survivors)
+	,format('Survivors: ~w~n',[Survivors]).
+
+
+
+%!	make_n_rollouts(+N,+Attacker,+Defender,+Scenario,-Results) is
+%!	det.
+%
+%	Perform N rollouts.
+%
+%	Scenario is passed to n_rollouts/4.
+%
+make_n_rollouts(N,Ms1,Ms2,Scenario,Res):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,n_rollouts(N, shooting, [MS, Us2, Scenario], Res).
+
+
+
+%!	list_n_rollouts(+N,+Attacker,+Defender,+Scenario) is det.
+%
+%	Perform N rollouts and list the results.
+%
+list_n_rollouts(N,Ms1,Ms2,Scenario):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,n_rollouts(N, shooting, [MS, Us2, Scenario], Rs)
+	,forall(member(Ri-I, Rs)
+	       ,(length(Ri, L)
+		,format('Rollout: ~w Survivors: ~w~n', [I,L])
+		)
+	       ).
+
+
+
+%!	sequence_sim(+Attacker,+Defender,+Sequence,+Scenario) is det.
+%
+%	Simulate one combat Sequence.
+%
+%	The only currently known Sequence is "shooting". Scenario is as
+%	in shooting_round_sim/4, passed to sequence_simulation/3.
+%
+sequence_sim(Ms1,Ms2,Sequence,Scenario,Survivors):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,sequence_simulation(Sequence, [MS, Us2, Scenario], Survivors).
+
+
+
+%!	list_sequence_sim(+Attacker,+Defender,+Sequence,+Scenario) is
+%!	det.
+%
+%	Simulate one combat Sequence and list the results.
+%
+list_sequence_sim(Ms1,Ms2,Sequence,Scenario):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,sequence_simulation(Sequence, [MS, Us2, Scenario], Ss)
+	,forall(member(Si, Ss)
+	       ,writeln(Si)
+	       )
+	,length(Ss, Survivors)
+	,format('Survivors: ~w~n',[Survivors]).
+
+
+
+%!	shooting_round_sim(+Attacker,+Defender,+Scenario,-Survivors) is
+%!	det.
+%
+%	Simulate one round of shooting, end-to-end.
+%
+%	Attacker and Defender are model sets. Scenario is a list,
+%	[D,M,C], where D is the distance of the Attacker to the Target;
+%	M the last movement of the Attacker; and C the Defender's cover
+%	bonus. Scenario is passed to shooting_sequence/4.
+%
+%	Survivors is the list of models in Defender that survived
+%	one round of shooting by Attacker.
+%
+shooting_round_sim(Ms1,Ms2,Scenario,Survivors):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS1)
+	,models_unit(Ms2_, nil, nil-Us2)
+	,shooting_sequence(MS1, Us2, Scenario, Survivors).
+
+
+
+%!	list_shooting_round_sim(+Attacker,+Defender,+Scenario) is det.
+%
+%	Simulate one round of shooting, end-to-end and list the results.
+%
+list_shooting_round_sim(Ms1,Ms2,Scenario):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,models_unit(Ms1_, nil, nil-Us1)
+	,model_sets(Us1, MS1)
+	,models_unit(Ms2_, nil, nil-Us2)
+	% [15, standard, 0]
+	,shooting_sequence(MS1, Us2, Scenario, Qs)
+	,forall(member(Si, Qs)
+	       ,writeln(Si)
+	       )
+	,length(Qs, Survivors)
+	,format('Survivors: ~w~n',[Survivors]).
+
+
+
+%!	models_damage(+Models,+Wounds,+AP,+Cover,+Damage) is det.
+%
+%	Inflict damage to Models from Wounds remaining unsaved.
+%
+models_damage(Ms,Ws,AP,Cv,Dmg,MsDs):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,allocate_wounds(Ws, Us, MsWs)
+	,saving_throws(MsWs, AP, Cv, Ss)
+	,inflict_damage(Ss, Dmg, MsDs).
+
+
+
+%!	list_models_damage(+Models,+Wounds,+AP,+Cover,+Damage) is det.
+%
+%	Inflict damage to Models from Wounds remaining unsaved.
+%
+list_models_damage(Ms,Ws,AP,Cv,Dmg):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,allocate_wounds(Ws, Us, MsWs)
+	,saving_throws(MsWs, AP, Cv, Ss)
+	,inflict_damage(Ss, Dmg, MsDs)
+	,forall(member(Di, MsDs)
+	       ,writeln(Di)
+	       ).
+
+
+
+%!	models_saves(+Models,+Wounds,+AP,+Cover) is det.
+%
+%	Calculate successful saves taken by Models in a unit.
+%
+%	AP is armour-penetration. Cover is defender's cover bonus.
+%
+models_saves(Ms,Ws,AP,Cv,Ss):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,allocate_wounds(Ws, Us, MsWs)
+	,saving_throws(MsWs, AP, Cv, Ss).
+
+
+
+%!	list_models_saves(+Models,+Wounds,+AP,+Cover) is det.
+%
+%	List successful saves taken by Models in a unit.
+%
+%	AP is armour-penetration. Cover is defender's cover bonus.
+%
+list_models_saves(Ms,Ws,AP,Cv):-
+	% Else goes inf.
+	must_be(nonvar, Cv)
+	,atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,allocate_wounds(Ws, Us, MsWs)
+	,saving_throws(MsWs, AP, Cv, Fs)
+	,forall(member(Fi,Fs)
+	       ,writeln(Fi)
+	       ).
 
 
 
