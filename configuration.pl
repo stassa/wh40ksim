@@ -1,4 +1,5 @@
-:-module(configuration, [format_string/2
+:-module(configuration, [api_port/1
+			,format_string/2
 			,model_characteristics/11
 			,print_unit_ability_text/1
 			,weapon_characteristics/8
@@ -7,12 +8,19 @@
 			,wound_allocation_strategy/1
 			]).
 
+%!	api_port(?Port) is semidet.
+%
+%	Port for the web api server.
+%
+api_port(5000).
+
 
 %!	format_string(?Predicate,?Format) is det.
 %
 %	Pretty-printing format used in a display module Predicate.
 %
 format_string(print_header, '~w ~*+~w ~*+~w ~*+~w~n').
+
 
 %!	model_characteristics(?Unit,?Name,?M,?WS,?BS,?S,?T,?W,?A,?Ld,?Sv,?Wg)
 %	is semidet.
@@ -28,6 +36,7 @@ model_characteristics(name,'M','WS','BS','S','T','W','A','Ld','Sv',wargear).
 % Would be nice to have the model's unit name also.
 %model_characteristics(unit,name,'M','WS','BS','S','T','W','A','Ld','Sv',wargear).
 
+
 %!	print_unit_ability_text(?Bool) is semidet.
 %
 %	Whether to print short descriptions for units' abilities.
@@ -37,6 +46,7 @@ model_characteristics(name,'M','WS','BS','S','T','W','A','Ld','Sv',wargear).
 %	tables, we may want to not even try.
 %
 print_unit_ability_text(false).
+
 
 %!	unit_ability_text(?Ability,?Description) is semidet.
 %
@@ -72,7 +82,6 @@ unit_ability_text(and_they_shall_know_no_fear, 'They say "no-no" to fear').
 unit_ability_text(combat_squads, '10-model squads may be deployed as two 5-model ones').
 
 
-
 %!	weapon_characteristics(?Id,?Profile,?Range,?Type,?S,?AP,?D,?Abilities)
 %!	is semidet.
 %
@@ -82,6 +91,7 @@ unit_ability_text(combat_squads, '10-model squads may be deployed as two 5-model
 %	Used to retrieve the named fields from weapon/8 terms.
 %
 weapon_characteristics('Id','Profile','Range','Type','S','AP','D','Abilities').
+
 
 %!	weapon_ability_text(?Weapon_ability, ?Text) is det.
 %
