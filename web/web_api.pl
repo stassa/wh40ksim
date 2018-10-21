@@ -9,13 +9,13 @@
 :- use_module(library(http/http_client), [http_read_data/3]).
 :-use_module(library(http/json_convert)).
 
-% Loaded from load_project for dev.
-% Uncomment for prod.
-%:-[web(json_objects)].
-
-
+%!	start_server_at(+Port) is det.
+%
+%	Start the web api server at the listed Port.
+%
 start_server_at(Port):-
 	http_server(http_dispatch, [port(Port)]).
+
 
 :- http_handler(root(api), api, []).
 
@@ -30,22 +30,11 @@ api(Req):-
 	,!
 	,format('Content-type: text/plain~n~n', [])
 	,http_read_json_dict(Req, Data)
-	,writeln(Data)
+	%,writeln(Data)
 	,atom_string(Functor, Data.functor)
 	,Call =.. [Functor|Data.args]
 	,scripts:call(Call, Res)
 	,format('~w~n',[Res])
-	,nl.
-api_(Req):-
-	member(method(post), Req)
-	,!
-	,format('Content-type: text/plain~n~n', [])
-	,http_read_json(Req, Data, [json_object(term)])
-	,json_to_prolog(Data,Call)
-	,writeln(Data)
-	,writeln(Call)
-	%,call(Call, Res)
-	%,format('~w~n',[Res])
 	,nl.
 
 % Nah, can't do this.

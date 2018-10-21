@@ -21,9 +21,6 @@ user:file_search_path(scripts, project_root(scripts)).
 :-use_module(src(display)).
 :-use_module(web(web_api)).
 :-use_module(scripts(scripts)).
-% Only for dev, so I can work on the command line.
-% Remove from prod.
-:-[web(json_objects)].
 
 edit_files:-
 	edit(project_root(load_project))
