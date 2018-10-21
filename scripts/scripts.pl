@@ -1,4 +1,8 @@
-:-module(scripts, [k_times_n_rounds/7
+:-module(scripts, [scenario_sims/5
+		  ,list_scenario_sims/4
+		  ,models_moving_distances/3
+		  ,list_models_moving_distances/2
+		  ,k_times_n_rounds/7
 		  ,list_k_times_n_rounds/6
 		  ,n_rounds_report/5
 		  ,n_round_sims/6
@@ -34,6 +38,70 @@ passed in by the json.
 
 :-use_module(src(unit)).
 :-use_module(src(simulation)).
+
+
+%!	scenario_sims(+Attacker,+Defender,+Sequence,+Scenario,+Results)
+%	is det.
+%
+%	Run a scenario simulation.
+%
+%	See scenario_simulation/5 for details.
+%
+scenario_sims(Ms1,Ms2,Sequence,Scenario,Results):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,atoms_compounds(Scenario,Scenario_)
+	,scenario_simulation(Sequence, Scenario_, Ms1_, Ms2_, Results).
+
+
+
+%!	list_scenario_sims(+Attacker,+Defender,+Sequence,+Scenario) is
+%!	det.
+%
+%	List the results of one set of Scenario simulations.
+%
+list_scenario_sims(Ms1,Ms2,Sequence,Scenario):-
+	atoms_compounds(Ms1, Ms1_)
+	,atoms_compounds(Ms2, Ms2_)
+	,atoms_compounds(Scenario,Scenario_)
+	,scenario_simulation(Sequence, Scenario_, Ms1_, Ms2_, Res)
+	,forall(member(Ri,Res)
+	       ,writeln(Ri)
+	       )
+	,length(Res, Survivors)
+	,format('Survivors: ~w~n',[Survivors]).
+
+
+
+%!	models_moving_distances(+Models,+Movement,-Distances) is det.
+%
+%	Calculate the moving Distances of a set of Models.
+%
+%	Movement is one of: [standard,advance,none].
+%
+models_moving_distances(Ms,Mv,Ms_Ds):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,model_sets(Us, MS)
+	,findall(Si-D
+		,(member(Si,MS)
+		 ,model_set_movement_distance(Si, Mv, D))
+		,Ms_Ds).
+
+
+
+%!	list_models_moving_distances(+Models,+Movement) is det.
+%
+%	List the moving distance of a set of Models.
+%
+list_models_moving_distances(Ms,Mv):-
+	atoms_compounds(Ms, Ms_)
+	,models_unit(Ms_, nil, nil-Us)
+	,model_sets(Us, MS)
+	,forall(member(Si,MS)
+		,(model_set_movement_distance(Si, Mv, D)
+		 ,writeln(Si:D))
+		).
 
 
 
