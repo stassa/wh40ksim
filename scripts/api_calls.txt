@@ -1,0 +1,109 @@
+Examples of calls to the Web API
+--------------------------------
+* These wrap around the predicates in scripts/scripts.pl, that are basically a
+  high-level interface to the project's main simulation predicates. A more
+  low-level API is to be done.
+
+- List or construct unit model sets
+  
+  curl --data '{"out_vars":0, "functor":"list_models_unit_sets", "args":[["fire_warrior_shasui-1", "fire_warrior-7", "mv1_gun_drone-2", "mv36_guardian_drone-1"],"Tactical Squad 1"]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"models_unit_sets", "args":[["fire_warrior_shasui-1", "fire_warrior-7", "mv1_gun_drone-2", "mv36_guardian_drone-1"]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- List numbers of attacks per model, per weapon in each model-set in a unit:
+
+  curl -X POST --data '{"out_vars":1, "functor":"models_attacks", "args":[["fire_warrior-12", "mv36_guardian_drone-2"], 8, "none"]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_models_attacks", "args":[["fire_warrior-12", "mv36_guardian_drone-2"], 8, "none"]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- List or calculate to-hit rolls for each modelset in a unit:
+  
+  curl -X POST --data '{"out_vars":0, "functor":"list_unit_roll_to_hit", "args":[["fire_warrior-11","fire_warrior_shasui-1","mv1_gun_drone-1","mv36_guardian_drone-1"],8,"none"]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"unit_roll_to_hit", "args":[["fire_warrior-11","fire_warrior_shasui-1","mv1_gun_drone-1","mv36_guardian_drone-1"],8,"none"]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Roll to wound given a number of hits, the hit strength and the target's
+  toughness:
+  curl -X POST --data '{"out_vars":1, "functor":"hits_roll_to_wound", "args":[8,4,4]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Allocate wounds to models in a unit:
+  
+  curl -X POST --data '{"out_vars":0, "functor":"list_models_allocated_wounds", "args":[["mv1_gun_drone-12", "mv36_guardian_drone-1"], 10]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"models_allocated_wounds", "args":[["mv1_gun_drone-12", "mv36_guardian_drone-1"], 10]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Roll to save for each model in a unit, for which 10 wounds have been
+  allocated, at -2 AP and with a cover bonus of 1:
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_models_saves", "args":[["mv1_gun_drone-12", "mv36_guardian_drone-1"], 10, -2, 1]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"models_saves", "args":[["mv1_gun_drone-12", "mv36_guardian_drone-1"], 10, -2, 1]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Inflict damage to models and modify their wounds (in the model object terms):
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_models_damage", "args":[["mv1_gun_drone-10"],10,-1,0,3]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"models_damage", "args":[["mv1_gun_drone-10"],10,-1,0,3]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Simulate one round of shooting, start-to-end:
+  
+  curl -X POST --data '{"out_vars":0, "functor":"list_shooting_round_sim", "args":[["fire_warrior-11", "fire_warrior_shasui-1"], ["space_marine_sergeant-1", "space_marine-4"],[15, "standard", 0]]}' http://localhost:5000/api --header "Contnt-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"shooting_round_sim", "args":[["fire_warrior-11", "fire_warrior_shasui-1"], ["space_marine_sergeant-1", "space_marine-4"],[15, "standard", 0]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Simulate one full combat sequence (but, only shooting) with movement and
+  distance information:
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_sequence_sim", "args":[["fire_warrior-11","fire_warrior_shasui-1"],["space_marine-4","space_marine_sergeant-1"],"shooting",[15,"none",1] ]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"sequence_sim", "args":[["fire_warrior-11","fire_warrior_shasui-1"],["space_marine-4","space_marine_sergeant-1"],"shooting",[15,"none",1] ]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Run 10 shooting simulations (rollouts):
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_n_rollouts", "args":[10,["mv1_gun_drone-12"],["space_marine_sergeant-1","space_marine-4"],[18,"none",0]  ]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"make_n_rollouts", "args":[10,["mv1_gun_drone-12"],["space_marine_sergeant-1","space_marine-4"],[18,"none",0]  ]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Simulate 2 rounds of shooting using n_rounds_simulation/4:
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_n_round_sims", "args":[2,["mv1_gun_drone-3"],["space_marine_sergeant-1","space_marine-9"],"shooting",[15,"none",0]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"n_round_sims", "args":[2,["mv1_gun_drone-3"],["space_marine_sergeant-1","space_marine-9"],"shooting",[15,"none",0]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Simulate 2 rounds of shooting and report results using n_rounds_report/3:
+
+  curl -X POST --data '{"out_vars":0, "functor":"n_rounds_report", "args":[5,["mv1_gun_drone-3"],["space_marine_sergeant-1","space_marine-9"],"shooting",[15,"none",0]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Simulate k times n rounds of shooting and report the average number of
+  survivors, where k = 100, n = 3:
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_k_times_n_rounds", "args":[1000,3,["fire_warrior-11","fire_warrior_shasui-1"],["space_marine_sergeant-1","space_marine-9"],"shooting",[30,"none",0]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"k_times_n_rounds", "args":[1000,3,["fire_warrior-11","fire_warrior_shasui-1"],["space_marine_sergeant-1","space_marine-9"],"shooting",[30,"none",0]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Calculate the moving distances of a set of models:
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_models_moving_distances", "args":[["fire_warrior_shasui-1","fire_warrior-7","mv1_gun_drone-2","mv36_guardian_drone-1"],"advance"]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"models_moving_distances", "args":[["fire_warrior_shasui-1","fire_warrior-7","mv1_gun_drone-2","mv36_guardian_drone-1"],"advance"]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+
+- Simulate 6 turns of an attacker shooting and a defender advancing for 6
+  turns from a distance of 30":
+
+  curl -X POST --data '{"out_vars":0, "functor":"list_scenario_sims", "args":[["mv1_gun_drone-3"],["space_marine_sergeant-1", "space_marine-9"],"shooting",["turns(6)", "starting_distance(30)","attacker_movement(standard,+1)","target_movement(advance,-1)","target_cover(false,_)"]]}' http://localhost:5000/api --header "Content-Type:application/json"
+
+  curl -X POST --data '{"out_vars":1, "functor":"scenario_sims", "args":[["mv1_gun_drone-3"],["space_marine_sergeant-1", "space_marine-9"],"shooting",["turns(6)", "starting_distance(30)","attacker_movement(standard,+1)","target_movement(advance,-1)","target_cover(false,_)"]]}' http://localhost:5000/api --header "Content-Type:application/json"
