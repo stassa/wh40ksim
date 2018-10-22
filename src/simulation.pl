@@ -72,7 +72,7 @@ if the charge succeeds).
 %
 k_simulations_report(K, N, S, Ps):-
 	k_simulations(K, N, S, Ps, Rs)
-	,format('Ran ~w simulations of ~w rounds each.~n', [K,n])
+	,format('Ran ~w simulations of ~w rounds each.~n', [K,N])
 	,findall(L
 		,(member(Ri-_I, Rs)
 		 ,length(Ri, L)
@@ -591,6 +591,8 @@ hit_roll(A, BS, Ms, Hn):-
 %
 wound_roll(0, _, _, 0):-
 	!.
+wound_roll(_, -, _, 0):-
+	!.
 wound_roll(_, nil, _, 0):-
 	!.
 wound_roll(Hn, S, T, Wn):-
@@ -765,7 +767,9 @@ inflict_damage(Ms, D, Rs):-
 	% an NdM die size term
 	(   number(D)
 	->  D_ = D
-	;   D = nil
+	;   D = - % e.g. photon grenades.
+	->  D_ = 0
+	;   D = nil % Not sure if this is the case anymore.
 	->  D_ = 0
 	;   roll(D, D_)
 	)

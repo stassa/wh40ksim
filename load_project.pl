@@ -6,7 +6,8 @@ user:file_search_path(lib, project_root(lib)).
 user:file_search_path(data, project_root(data)).
 user:file_search_path(output, project_root(output)).
 user:file_search_path(mathemagicks, project_root(lib/mathemagicks/src)).
-
+user:file_search_path(web, project_root(web)).
+user:file_search_path(scripts, project_root(scripts)).
 
 :-doc_browser.
 
@@ -18,6 +19,8 @@ user:file_search_path(mathemagicks, project_root(lib/mathemagicks/src)).
 :-use_module(src(model)).
 :-use_module(src(simulation)).
 :-use_module(src(display)).
+:-use_module(web(web_api)).
+:-use_module(scripts(scripts)).
 
 edit_files:-
 	edit(project_root(load_project))
@@ -29,6 +32,8 @@ edit_files:-
 	,edit(src(model))
 	,edit(src(wargear))
 	,edit(src(display))
+	,edit(web(web_api))
+	,edit(scripts(scripts))
 	.
 :-edit_files.
 
@@ -39,3 +44,6 @@ edit_files:-
 %:-set_prolog_stack(global, limit(2**9*10**6)).
 :-prolog_stack_property(global, limit(X))
 ,format('Global stack limit ~D~n',[X]).
+
+:- configuration:api_port(P)
+  ,start_server_at(P).

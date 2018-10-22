@@ -312,7 +312,7 @@ abilities(tactical_drones, saviour_protocols).
 abilities(tactical_drones, threat_identification_protocols).
 abilities(tactical_drones, shield_generator).
 abilities(tactical_drones, stable_platform).
-abilities(tactical_squad,and_the_shall_know_no_fear).
+abilities(tactical_squad,and_they_shall_know_no_fear).
 abilities(tactical_squad,combat_squads).
 
 
